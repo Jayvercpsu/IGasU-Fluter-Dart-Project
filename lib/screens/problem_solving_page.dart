@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../data/gas_law_content.dart';
+import '../data/learning_stats.dart';
 import 'main_screen.dart';
 
 class ProblemSolvingPage extends StatefulWidget {
-  const ProblemSolvingPage({super.key});
+  const ProblemSolvingPage({this.topicRequest, super.key});
+
+  final ValueNotifier<GasLawType?>? topicRequest;
 
   @override
   State<ProblemSolvingPage> createState() => _ProblemSolvingPageState();
@@ -20,10 +23,32 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
   bool _showError = false;
   String _errorMessage = '';
   String _solutionText = '';
+  final LearningStats _stats = LearningStats.instance;
 
-  List<PracticeProblem> get _filteredProblems => practiceProblemsFor(_selectedType);
+  List<PracticeProblem> get _filteredProblems =>
+      practiceProblemsFor(_selectedType);
 
-  PracticeProblem get _currentProblem => _filteredProblems[_currentProblemIndex];
+  PracticeProblem get _currentProblem =>
+      _filteredProblems[_currentProblemIndex];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.topicRequest?.addListener(_handleTopicRequest);
+    _handleTopicRequest();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProblemSolvingPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.topicRequest == widget.topicRequest) {
+      return;
+    }
+
+    oldWidget.topicRequest?.removeListener(_handleTopicRequest);
+    widget.topicRequest?.addListener(_handleTopicRequest);
+    _handleTopicRequest();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +77,7 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
             _buildAnswerSection(),
             const SizedBox(height: 20),
             _buildActionButtons(),
-            if (_showError) ...[
-              const SizedBox(height: 20),
-              _buildErrorCard(),
-            ],
+            if (_showError) ...[const SizedBox(height: 20), _buildErrorCard()],
             if (_showSolution) ...[
               const SizedBox(height: 20),
               _buildSolutionCard(),
@@ -210,17 +232,15 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
         const SizedBox(height: 8),
         Text(
           'Expected data: ${_currentProblem.givenText}',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 13,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 13),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: _givenController,
           maxLines: 3,
           decoration: InputDecoration(
-            hintText: 'Write the given values here (for example, P1 = 2 atm, V1 = 4 L...)',
+            hintText:
+                'Write the given values here (for example, P1 = 2 atm, V1 = 4 L...)',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey[300]!),
@@ -247,10 +267,7 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
         const SizedBox(height: 8),
         Text(
           'Enter the final volume in liters.',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 13,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 13),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -370,7 +387,11 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
                     color: const Color(0xFF5CB85C),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.lightbulb, color: Colors.white, size: 20),
+                  child: const Icon(
+                    Icons.lightbulb,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -464,7 +485,8 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
     if (!_isGivenCorrect(givenInput, _currentProblem)) {
       setState(() {
         _showError = true;
-        _errorMessage = 'The given values are incomplete or not matched correctly.\n\nCorrect given: ${_currentProblem.givenText}';
+        _errorMessage =
+            'The given values are incomplete or not matched correctly.\n\nCorrect given: ${_currentProblem.givenText}';
       });
       return;
     }
@@ -478,7 +500,10 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
       return;
     }
 
-    if ((userValue - _currentProblem.answer).abs() <= 0.1) {
+    final isCorrect = (userValue - _currentProblem.answer).abs() <= 0.1;
+    _stats.recordAttempt(type: _selectedType, isCorrect: isCorrect);
+
+    if (isCorrect) {
       setState(() {
         _showSolution = true;
         _solutionText = 'Correct.\n\n${_currentProblem.solutionText}';
@@ -503,7 +528,9 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
   bool _isGivenCorrect(String input, PracticeProblem problem) {
     return problem.givenFields.every((field) {
       final pairWithoutUnit = _normalize('${field.label}${field.value}');
-      final pairWithUnit = _normalize('${field.label}${field.value}${field.unit}');
+      final pairWithUnit = _normalize(
+        '${field.label}${field.value}${field.unit}',
+      );
       return input.contains(pairWithoutUnit) || input.contains(pairWithUnit);
     });
   }
@@ -513,8 +540,9 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
   }
 
   double? _parseNumeric(String value) {
-    final match = RegExp(r'-?\d+(?:\.\d+)?')
-        .firstMatch(value.replaceAll(',', ''));
+    final match = RegExp(
+      r'-?\d+(?:\.\d+)?',
+    ).firstMatch(value.replaceAll(',', ''));
     if (match == null) {
       return null;
     }
@@ -531,6 +559,25 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
     _solutionText = '';
   }
 
+  void _handleTopicRequest() {
+    final requestedType = widget.topicRequest?.value;
+    if (requestedType == null) {
+      return;
+    }
+
+    if (_selectedType != requestedType) {
+      setState(() {
+        _selectedType = requestedType;
+        _currentProblemIndex = 0;
+        _resetInputsAndFeedback();
+      });
+    } else {
+      setState(_resetInputsAndFeedback);
+    }
+
+    widget.topicRequest?.value = null;
+  }
+
   void _navigateBack(BuildContext context) {
     final mainScreen = context.mainScreen;
     mainScreen?.pageController.animateToPage(
@@ -542,6 +589,7 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
 
   @override
   void dispose() {
+    widget.topicRequest?.removeListener(_handleTopicRequest);
     _givenController.dispose();
     _answerController.dispose();
     super.dispose();

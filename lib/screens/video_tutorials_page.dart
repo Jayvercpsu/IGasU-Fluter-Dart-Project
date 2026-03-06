@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../data/gas_law_content.dart';
 import 'main_screen.dart';
@@ -25,10 +26,10 @@ class VideoTutorialsPage extends StatelessWidget {
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: tutorialLessons.length,
+                itemCount: videoTutorialReferences.length,
                 itemBuilder: (context, index) {
-                  final lesson = tutorialLessons[index];
-                  return _buildLessonCard(context, lesson, index);
+                  final video = videoTutorialReferences[index];
+                  return _buildVideoCard(context, video);
                 },
               ),
             ),
@@ -58,7 +59,7 @@ class VideoTutorialsPage extends StatelessWidget {
             const Icon(Icons.ondemand_video, color: Colors.white, size: 40),
             const SizedBox(height: 12),
             const Text(
-              'Gas Laws Lesson Scripts',
+              'Gas Laws Video Tutorials',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -67,11 +68,8 @@ class VideoTutorialsPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${tutorialLessons.length} guided tutorials with worked examples',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              '${videoTutorialReferences.length} tutorials ready to play',
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
           ],
         ),
@@ -79,87 +77,110 @@ class VideoTutorialsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLessonCard(
-    BuildContext context,
-    TutorialLesson lesson,
-    int index,
-  ) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 200 + (index * 100)),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 16),
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: () => _showLessonDetails(context, lesson),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: lesson.type.color,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: lesson.type.color.withValues(alpha: 0.3),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.play_arrow, color: Colors.white, size: 28),
+  Widget _buildVideoCard(BuildContext context, VideoTutorialReference video) {
+    final lesson = _lessonFor(video.type);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () {
+          if (lesson == null) {
+            _showVideoOnlyDetails(context, video);
+            return;
+          }
+          _showLessonDetails(context, lesson, video);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: video.color,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: video.color.withValues(alpha: 0.3),
+                      spreadRadius: 2,
+                      blurRadius: 8,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lesson.type.label,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      video.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        lesson.header,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      video.subtitle ?? lesson?.header ?? 'Video tutorial',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildChip(
+                          label: 'Tutorial',
+                          textColor: video.color,
+                          backgroundColor: video.color.withValues(alpha: 0.12),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _buildChip(
-                            label: 'Guided lesson',
-                            textColor: lesson.type.color,
-                            backgroundColor: lesson.type.color.withValues(alpha: 0.12),
-                          ),
+                        _buildChip(
+                          label: video.duration,
+                          textColor: video.color,
+                          backgroundColor: video.color.withValues(alpha: 0.12),
+                        ),
+                        if (lesson != null)
                           _buildChip(
                             label: lesson.type.formula,
-                            textColor: lesson.type.color,
-                            backgroundColor: lesson.type.color.withValues(alpha: 0.12),
+                            textColor: video.color,
+                            backgroundColor: video.color.withValues(
+                              alpha: 0.12,
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-              ],
-            ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  TutorialLesson? _lessonFor(GasLawType? type) {
+    if (type == null) {
+      return null;
+    }
+
+    for (final lesson in tutorialLessons) {
+      if (lesson.type == type) {
+        return lesson;
+      }
+    }
+    return null;
   }
 
   Widget _buildChip({
@@ -184,13 +205,17 @@ class VideoTutorialsPage extends StatelessWidget {
     );
   }
 
-  void _showLessonDetails(BuildContext pageContext, TutorialLesson lesson) {
+  void _showLessonDetails(
+    BuildContext pageContext,
+    TutorialLesson lesson,
+    VideoTutorialReference video,
+  ) {
     showModalBottomSheet<void>(
       context: pageContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.88,
+        height: MediaQuery.of(context).size.height * 0.92,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -215,7 +240,11 @@ class VideoTutorialsPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.play_circle_filled, color: Colors.white, size: 40),
+                      const Icon(
+                        Icons.play_circle_filled,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -235,10 +264,7 @@ class VideoTutorialsPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     lesson.description,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -250,6 +276,13 @@ class VideoTutorialsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildSectionTitle('Tutorial Video'),
+                    const SizedBox(height: 8),
+                    _AssetVideoPlayer(
+                      videoAssetPath: video.videoAssetPath,
+                      accentColor: lesson.type.color,
+                    ),
+                    const SizedBox(height: 20),
                     _buildFormulaCard(lesson),
                     const SizedBox(height: 20),
                     _buildSectionTitle('Overview'),
@@ -328,7 +361,10 @@ class VideoTutorialsPage extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Navigator.pop(context);
-                        _navigateToProblems(pageContext);
+                        _navigateToProblems(
+                          pageContext,
+                          selectedType: lesson.type,
+                        );
                       },
                       icon: const Icon(Icons.quiz_outlined),
                       label: const Text('Practice'),
@@ -346,6 +382,83 @@ class VideoTutorialsPage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showVideoOnlyDetails(
+    BuildContext pageContext,
+    VideoTutorialReference video,
+  ) {
+    showModalBottomSheet<void>(
+      context: pageContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      video.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                video.subtitle ?? 'Supplementary tutorial content',
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Tutorial Video'),
+              const SizedBox(height: 8),
+              _AssetVideoPlayer(
+                videoAssetPath: video.videoAssetPath,
+                accentColor: video.color,
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -386,10 +499,7 @@ class VideoTutorialsPage extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
     );
   }
 
@@ -456,8 +566,13 @@ class VideoTutorialsPage extends StatelessWidget {
     );
   }
 
-  void _navigateToProblems(BuildContext context) {
+  void _navigateToProblems(BuildContext context, {GasLawType? selectedType}) {
     final mainScreen = context.mainScreen;
+    if (selectedType != null) {
+      mainScreen?.openProblemSolvingForTopic(selectedType);
+      return;
+    }
+
     mainScreen?.pageController.animateToPage(
       2,
       duration: const Duration(milliseconds: 300),
@@ -472,5 +587,149 @@ class VideoTutorialsPage extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+}
+
+class _AssetVideoPlayer extends StatefulWidget {
+  const _AssetVideoPlayer({
+    required this.videoAssetPath,
+    required this.accentColor,
+  });
+
+  final String videoAssetPath;
+  final Color accentColor;
+
+  @override
+  State<_AssetVideoPlayer> createState() => _AssetVideoPlayerState();
+}
+
+class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
+  late final VideoPlayerController _controller;
+  bool _hasInitError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.asset(widget.videoAssetPath);
+    _controller
+        .initialize()
+        .then((_) {
+          _controller.setLooping(false);
+          if (!mounted) {
+            return;
+          }
+          setState(() {});
+        })
+        .catchError((_) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _hasInitError = true;
+          });
+        });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasInitError) {
+      return _buildFallback('Unable to load local video file.');
+    }
+
+    if (!_controller.value.isInitialized) {
+      return _buildFallback('Loading video...');
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: _controller.value.aspectRatio == 0
+                  ? 16 / 9
+                  : _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            ),
+            Container(
+              color: Colors.black87,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        if (_controller.value.isPlaying) {
+                          _controller.pause();
+                        } else {
+                          _controller.play();
+                        }
+                      });
+                    },
+                    icon: Icon(
+                      _controller.value.isPlaying
+                          ? Icons.pause
+                          : Icons.play_arrow,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Expanded(
+                    child: VideoProgressIndicator(
+                      _controller,
+                      allowScrubbing: true,
+                      colors: VideoProgressColors(
+                        playedColor: widget.accentColor,
+                        bufferedColor: Colors.white54,
+                        backgroundColor: Colors.white24,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_formatDuration(_controller.value.position)} / ${_formatDuration(_controller.value.duration)}',
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallback(String message) {
+    return Container(
+      width: double.infinity,
+      height: 220,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: widget.accentColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: widget.accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+
+  String _formatDuration(Duration value) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(value.inMinutes.remainder(60));
+    final seconds = twoDigits(value.inSeconds.remainder(60));
+    if (value.inHours > 0) {
+      return '${value.inHours}:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
   }
 }
