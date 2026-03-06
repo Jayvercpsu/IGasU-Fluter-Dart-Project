@@ -1,74 +1,34 @@
 import 'package:flutter/material.dart';
+
+import '../data/gas_law_content.dart';
 import 'main_screen.dart';
 
 class ScoreDashboardPage extends StatelessWidget {
   const ScoreDashboardPage({super.key});
 
-  final List<Map<String, dynamic>> _scores = const [
-    {
-      'topic': 'Boyle\'s Law',
-      'score': 76,
-      'color': Color(0xFF4A90E2),
-      'problems_solved': 8,
-      'total_problems': 10,
-      'last_activity': '2 hours ago',
-    },
-    {
-      'topic': 'Charles\' Law',
-      'score': 60,
-      'color': Color(0xFFFF6B6B),
-      'problems_solved': 6,
-      'total_problems': 10,
-      'last_activity': '1 day ago',
-    },
-    {
-      'topic': 'Gay-Lussac\'s Law',
-      'score': 80,
-      'color': Color(0xFF5CB85C),
-      'problems_solved': 8,
-      'total_problems': 10,
-      'last_activity': '3 hours ago',
-    },
-    {
-      'topic': 'Ideal Gas Law',
-      'score': 90,
-      'color': Color(0xFFFFB74D),
-      'problems_solved': 9,
-      'total_problems': 10,
-      'last_activity': '30 minutes ago',
-    },
-    {
-      'topic': 'Combined Gas Law',
-      'score': 45,
-      'color': Color(0xFF9C27B0),
-      'problems_solved': 4,
-      'total_problems': 10,
-      'last_activity': '1 week ago',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Score Dashboard'),
+        title: const Text('Learning Dashboard'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => _navigateBack(context),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             const SizedBox(height: 20),
-            _buildOverallStatsCard(),
+            _buildOverviewCard(),
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: _scores.length,
+                itemCount: GasLawType.values.length,
                 itemBuilder: (context, index) {
-                  return _buildScoreCard(_scores[index], index);
+                  final type = GasLawType.values[index];
+                  return _buildTopicCard(context, type, index);
                 },
               ),
             ),
@@ -78,18 +38,7 @@ class ScoreDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildOverallStatsCard() {
-    double averageScore =
-        _scores.fold(0.0, (sum, item) => sum + item['score']) / _scores.length;
-    int totalSolved = _scores.fold(
-      0,
-      (sum, item) => sum + (item['problems_solved'] as int),
-    );
-    int totalProblems = _scores.fold(
-      0,
-      (sum, item) => sum + (item['total_problems'] as int),
-    );
-
+  Widget _buildOverviewCard() {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -106,7 +55,7 @@ class ScoreDashboardPage extends StatelessWidget {
         child: Column(
           children: [
             const Text(
-              'Overall Performance',
+              'Available Content',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -117,15 +66,9 @@ class ScoreDashboardPage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem(
-                  'Average Score',
-                  '${averageScore.toStringAsFixed(1)}%',
-                ),
-                _buildStatItem(
-                  'Problems Solved',
-                  '$totalSolved/$totalProblems',
-                ),
-                _buildStatItem('Topics', '${_scores.length}'),
+                _buildStatItem('Topics', '${GasLawType.values.length}'),
+                _buildStatItem('Lessons', '${tutorialLessons.length}'),
+                _buildStatItem('Problems', '${practiceProblems.length}'),
               ],
             ),
           ],
@@ -154,7 +97,11 @@ class ScoreDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreCard(Map<String, dynamic> scoreData, int index) {
+  Widget _buildTopicCard(BuildContext context, GasLawType type, int index) {
+    final lesson = tutorialLessons.firstWhere((item) => item.type == type);
+    final problems = practiceProblemsFor(type);
+    final share = problems.length / practiceProblems.length;
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 100)),
       child: Card(
@@ -162,7 +109,7 @@ class ScoreDashboardPage extends StatelessWidget {
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: InkWell(
-          onTap: () => _showDetailedStats(scoreData),
+          onTap: () => _showTopicDetails(context, type),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -175,35 +122,37 @@ class ScoreDashboardPage extends StatelessWidget {
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: scoreData['color'],
+                        color: type.color,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        scoreData['topic'],
+                        type.label,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    Text(
-                      '${scoreData['score']}%',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: scoreData['color'],
-                      ),
-                    ),
+                    _buildFormulaBadge(type),
                   ],
                 ),
                 const SizedBox(height: 12),
+                Text(
+                  lesson.header,
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 LinearProgressIndicator(
-                  value: scoreData['score'] / 100,
+                  value: share,
                   backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(scoreData['color']),
+                  valueColor: AlwaysStoppedAnimation<Color>(type.color),
                   minHeight: 8,
                 ),
                 const SizedBox(height: 12),
@@ -211,11 +160,11 @@ class ScoreDashboardPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Problems: ${scoreData['problems_solved']}/${scoreData['total_problems']}',
+                      'Guided lessons: 1',
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                     Text(
-                      scoreData['last_activity'],
+                      'Practice problems: ${problems.length}',
                       style: TextStyle(color: Colors.grey[600], fontSize: 12),
                     ),
                   ],
@@ -228,51 +177,76 @@ class ScoreDashboardPage extends StatelessWidget {
     );
   }
 
-  void _showDetailedStats(Map<String, dynamic> scoreData) {
-    showDialog(
-      context: NavigationService.navigatorKey.currentContext!,
-      builder: (context) => AlertDialog(
-        title: Text(scoreData['topic']),
+  Widget _buildFormulaBadge(GasLawType type) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: type.color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        type.formula,
+        style: TextStyle(
+          color: type.color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  void _showTopicDetails(BuildContext context, GasLawType type) {
+    final lesson = tutorialLessons.firstWhere((item) => item.type == type);
+    final problems = practiceProblemsFor(type);
+    final sampleProblem = problems.first;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(type.label),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Current Score:', '${scoreData['score']}%'),
+            _buildDetailRow('Formula', type.formula),
             const SizedBox(height: 8),
-            _buildDetailRow(
-              'Problems Solved:',
-              '${scoreData['problems_solved']}/${scoreData['total_problems']}',
-            ),
+            _buildDetailRow('Lesson focus', lesson.header),
             const SizedBox(height: 8),
-            _buildDetailRow(
-              'Success Rate:',
-              '${((scoreData['problems_solved'] / scoreData['total_problems']) * 100).toStringAsFixed(1)}%',
-            ),
+            _buildDetailRow('Tutorial answer', lesson.finalAnswer),
             const SizedBox(height: 8),
-            _buildDetailRow('Last Activity:', scoreData['last_activity']),
+            _buildDetailRow('Practice problems', '${problems.length}'),
+            const SizedBox(height: 8),
+            _buildDetailRow('Starter answer', sampleProblem.answerText),
             const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: scoreData['score'] / 100,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(scoreData['color']),
-              minHeight: 8,
+            Text(
+              lesson.description,
+              style: TextStyle(
+                color: Colors.grey[700],
+                height: 1.4,
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Close'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              // Here you would navigate to practice problems for this topic
+              Navigator.pop(dialogContext);
+              final mainScreen = context.mainScreen;
+              mainScreen?.pageController.animateToPage(
+                2,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: scoreData['color'],
+              backgroundColor: type.color,
+              foregroundColor: Colors.white,
             ),
-            child: const Text('Practice More'),
+            child: const Text('Practice'),
           ),
         ],
       ),
@@ -280,10 +254,14 @@ class ScoreDashboardPage extends StatelessWidget {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
         Text(value),
       ],
     );
@@ -297,9 +275,4 @@ class ScoreDashboardPage extends StatelessWidget {
       curve: Curves.easeInOut,
     );
   }
-}
-
-// Navigation service for accessing context globally
-class NavigationService {
-  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 }

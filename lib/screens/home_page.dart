@@ -34,7 +34,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 20),
             _buildMenuCard(
               context,
-              'Score Dashboard',
+              'Learning Dashboard',
               Icons.dashboard_outlined,
               const Color(0xFFFF6B6B),
               () => _navigateWithAnimation(context, 3),
@@ -56,7 +56,7 @@ class HomePage extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       child: Card(
         elevation: 8,
-        shadowColor: color.withOpacity(0.3),
+        shadowColor: color.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: InkWell(
           onTap: onTap,
@@ -67,7 +67,7 @@ class HomePage extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.8)],
+                colors: [color, color.withValues(alpha: 0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

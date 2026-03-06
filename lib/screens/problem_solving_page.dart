@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../data/gas_law_content.dart';
 import 'main_screen.dart';
 
 class ProblemSolvingPage extends StatefulWidget {
@@ -11,37 +13,17 @@ class ProblemSolvingPage extends StatefulWidget {
 class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
   final TextEditingController _givenController = TextEditingController();
   final TextEditingController _answerController = TextEditingController();
+
+  GasLawType _selectedType = GasLawType.boyle;
+  int _currentProblemIndex = 0;
   bool _showSolution = false;
   bool _showError = false;
   String _errorMessage = '';
   String _solutionText = '';
-  
-  // Sample Boyle's Law problem
-  final Map<String, dynamic> _currentProblem = {
-    'type': 'Boyle\'s Law',
-    'question': 'A gas has an initial volume of 200 L and an initial pressure of 300 atm. If the pressure increases to 450 atm while the temperature remains constant, what is the new volume of the gas?',
-    'given': 'P₁ = 300 atm, V₁ = 200 L, P₂ = 450 atm',
-    'answer': '133.33',
-    'solution': '''Using Boyle's Law: P₁V₁ = P₂V₂
 
-Given:
-P₁ = 300 atm, V₁ = 200 L
-P₂ = 450 atm, V₂ = ?
+  List<PracticeProblem> get _filteredProblems => practiceProblemsFor(_selectedType);
 
-Step 1: Apply Boyle's Law formula
-P₁V₁ = P₂V₂
-
-Step 2: Solve for V₂
-V₂ = (P₁V₁)/P₂
-
-Step 3: Substitute values
-V₂ = (300 × 200)/450
-V₂ = 60,000/450
-V₂ = 133.33 L
-
-Therefore, the new volume is 133.33 L''',
-    'color': Color(0xFF4A90E2),
-  };
+  PracticeProblem get _currentProblem => _filteredProblems[_currentProblemIndex];
 
   @override
   Widget build(BuildContext context) {
@@ -54,18 +36,22 @@ Therefore, the new volume is 133.33 L''',
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
+            _buildTopicSelector(),
+            const SizedBox(height: 20),
             _buildProblemCard(),
+            const SizedBox(height: 20),
+            _buildProblemNavigator(),
             const SizedBox(height: 30),
             _buildGivenSection(),
             const SizedBox(height: 20),
             _buildAnswerSection(),
             const SizedBox(height: 20),
-            _buildCheckAnswerButton(),
+            _buildActionButtons(),
             if (_showError) ...[
               const SizedBox(height: 20),
               _buildErrorCard(),
@@ -73,7 +59,54 @@ Therefore, the new volume is 133.33 L''',
             if (_showSolution) ...[
               const SizedBox(height: 20),
               _buildSolutionCard(),
+              const SizedBox(height: 16),
+              _buildNextProblemButton(),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopicSelector() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Choose a topic',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: GasLawType.values.map((type) {
+                final isSelected = type == _selectedType;
+                return ChoiceChip(
+                  label: Text(
+                    '${type.label} (${practiceProblemCountFor(type)})',
+                  ),
+                  selected: isSelected,
+                  selectedColor: type.color.withValues(alpha: 0.18),
+                  labelStyle: TextStyle(
+                    color: isSelected ? type.color : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isSelected ? type.color : Colors.grey.shade300,
+                    ),
+                  ),
+                  onSelected: (_) => _selectProblemType(type),
+                );
+              }).toList(),
+            ),
           ],
         ),
       ),
@@ -94,26 +127,75 @@ Therefore, the new volume is 133.33 L''',
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _currentProblem['color'],
+                    color: _selectedType.color,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.quiz, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  '${_currentProblem['type']} Problem',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                Expanded(
+                  child: Text(
+                    _selectedType.label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
+                _buildBadge(_selectedType.formula, _selectedType.color),
               ],
             ),
             const SizedBox(height: 16),
             Text(
-              _currentProblem['question'],
+              'Problem ${_currentProblemIndex + 1} of ${_filteredProblems.length}',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _currentProblem.question,
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProblemNavigator() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _changeProblem(-1),
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Previous'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _changeProblem(1),
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('Next'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -125,19 +207,27 @@ Therefore, the new volume is 133.33 L''',
           'Write down the Given:',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Expected data: ${_currentProblem.givenText}',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 13,
+          ),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _givenController,
           maxLines: 3,
           decoration: InputDecoration(
-            hintText: 'Write the given values here (e.g., P₁ = 300 atm, V₁ = 200 L...)',
+            hintText: 'Write the given values here (for example, P1 = 2 atm, V1 = 4 L...)',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4A90E2), width: 2),
+              borderSide: BorderSide(color: _selectedType.color, width: 2),
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
@@ -154,18 +244,26 @@ Therefore, the new volume is 133.33 L''',
           'Your Answer:',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Enter the final volume in liters.',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 13,
+          ),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _answerController,
           decoration: InputDecoration(
-            hintText: 'Enter your final answer (numerical value only)',
+            hintText: 'Enter your final answer',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4A90E2), width: 2),
+              borderSide: BorderSide(color: _selectedType.color, width: 2),
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
@@ -174,116 +272,186 @@ Therefore, the new volume is 133.33 L''',
     );
   }
 
-  Widget _buildCheckAnswerButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _checkAnswer,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4A90E2),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _showWorkedSolution,
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Show Solution'),
           ),
-          elevation: 4,
         ),
-        child: const Text(
-          'Check Answer',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: _checkAnswer,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _selectedType.color,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+            ),
+            child: const Text(
+              'Check Answer',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   Widget _buildErrorCard() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      child: Card(
-        elevation: 6,
-        color: const Color(0xFFFFEBEE),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF6B6B),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.error, color: Colors.white, size: 20),
+    return Card(
+      elevation: 6,
+      color: const Color(0xFFFFEBEE),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B6B),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'ERROR',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFFF6B6B),
-                    ),
+                  child: const Icon(Icons.error, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Need to fix something',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFF6B6B),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage,
-                style: const TextStyle(fontSize: 16, height: 1.5),
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage,
+              style: const TextStyle(fontSize: 16, height: 1.5),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildSolutionCard() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      child: Card(
-        elevation: 6,
-        color: const Color(0xFFF0F8F0),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5CB85C),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.lightbulb, color: Colors.white, size: 20),
+    return Card(
+      elevation: 6,
+      color: const Color(0xFFF0F8F0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5CB85C),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'SOLUTION',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF5CB85C),
-                    ),
+                  child: const Icon(Icons.lightbulb, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Worked Solution',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF5CB85C),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _solutionText,
-                style: const TextStyle(fontSize: 14, height: 1.5),
-              ),
-            ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _solutionText,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextProblemButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _changeProblem(1),
+        icon: const Icon(Icons.arrow_forward),
+        label: const Text('Go to Next Problem'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _selectedType.color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  void _selectProblemType(GasLawType type) {
+    if (_selectedType == type) {
+      return;
+    }
+
+    setState(() {
+      _selectedType = type;
+      _currentProblemIndex = 0;
+      _resetInputsAndFeedback();
+    });
+  }
+
+  void _changeProblem(int step) {
+    final total = _filteredProblems.length;
+    setState(() {
+      _currentProblemIndex = (_currentProblemIndex + step) % total;
+      if (_currentProblemIndex < 0) {
+        _currentProblemIndex += total;
+      }
+      _resetInputsAndFeedback();
+    });
   }
 
   void _checkAnswer() {
@@ -292,69 +460,75 @@ Therefore, the new volume is 133.33 L''',
       _showSolution = false;
     });
 
-    // Check if given is correct
-    String givenInput = _givenController.text.toLowerCase().replaceAll(' ', '');
-    String correctGiven = _currentProblem['given'].toLowerCase().replaceAll(' ', '');
-    
-    // Remove special characters for comparison
-    givenInput = givenInput.replaceAll(RegExp(r'[₁₂=]'), '');
-    correctGiven = correctGiven.replaceAll(RegExp(r'[₁₂=]'), '');
-
-    if (!_isGivenCorrect(givenInput, correctGiven)) {
+    final givenInput = _normalize(_givenController.text);
+    if (!_isGivenCorrect(givenInput, _currentProblem)) {
       setState(() {
         _showError = true;
-        _errorMessage = 'Incorrect Given! Please write down the correct given values.\n\nCorrect Given: ${_currentProblem['given']}';
+        _errorMessage = 'The given values are incomplete or not matched correctly.\n\nCorrect given: ${_currentProblem.givenText}';
       });
       return;
     }
 
-    // Check answer
-    String userAnswer = _answerController.text.trim();
-    String correctAnswer = _currentProblem['answer'];
-
-    if (userAnswer.isEmpty) {
-      setState(() {
-        _showError = true;
-        _errorMessage = 'Please enter your answer!';
-      });
-      return;
-    }
-
-    double? userValue = double.tryParse(userAnswer);
-    double? correctValue = double.tryParse(correctAnswer);
-
+    final userValue = _parseNumeric(_answerController.text);
     if (userValue == null) {
       setState(() {
         _showError = true;
-        _errorMessage = 'Please enter a valid numerical answer!';
+        _errorMessage = 'Please enter a valid numerical answer.';
       });
       return;
     }
 
-    // Check if answer is within acceptable range (±0.1)
-    if (correctValue != null && (userValue - correctValue).abs() <= 0.1) {
+    if ((userValue - _currentProblem.answer).abs() <= 0.1) {
       setState(() {
         _showSolution = true;
-        _solutionText = 'Correct! 🎉\n\n${_currentProblem['solution']}';
+        _solutionText = 'Correct.\n\n${_currentProblem.solutionText}';
       });
     } else {
       setState(() {
         _showError = true;
-        _errorMessage = 'Incorrect answer! Please try again.\n\nHint: Check your calculations and make sure you\'re using the correct formula.';
+        _errorMessage =
+            'Incorrect answer. Recheck the formula substitution and solve for V2 again.';
       });
     }
   }
 
-  bool _isGivenCorrect(String userGiven, String correctGiven) {
-    // Check if user input contains key elements
-    List<String> requiredElements = ['p1=300', 'v1=200', 'p2=450'];
-    
-    for (String element in requiredElements) {
-      if (!userGiven.contains(element.replaceAll('=', ''))) {
-        return false;
-      }
+  void _showWorkedSolution() {
+    setState(() {
+      _showError = false;
+      _showSolution = true;
+      _solutionText = _currentProblem.solutionText;
+    });
+  }
+
+  bool _isGivenCorrect(String input, PracticeProblem problem) {
+    return problem.givenFields.every((field) {
+      final pairWithoutUnit = _normalize('${field.label}${field.value}');
+      final pairWithUnit = _normalize('${field.label}${field.value}${field.unit}');
+      return input.contains(pairWithoutUnit) || input.contains(pairWithUnit);
+    });
+  }
+
+  String _normalize(String value) {
+    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9.]'), '');
+  }
+
+  double? _parseNumeric(String value) {
+    final match = RegExp(r'-?\d+(?:\.\d+)?')
+        .firstMatch(value.replaceAll(',', ''));
+    if (match == null) {
+      return null;
     }
-    return true;
+
+    return double.tryParse(match.group(0)!);
+  }
+
+  void _resetInputsAndFeedback() {
+    _givenController.clear();
+    _answerController.clear();
+    _showError = false;
+    _showSolution = false;
+    _errorMessage = '';
+    _solutionText = '';
   }
 
   void _navigateBack(BuildContext context) {

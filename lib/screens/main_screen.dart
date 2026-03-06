@@ -5,6 +5,10 @@ import 'video_tutorials_page.dart';
 import 'problem_solving_page.dart';
 import 'score_dashboard_page.dart';
 
+abstract class MainScreenController {
+  PageController get pageController;
+}
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -13,7 +17,8 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin
+    implements MainScreenController {
   int _currentIndex = 0;
   late PageController _pageController;
   late AnimationController _fadeController;
@@ -80,10 +85,12 @@ class _MainScreenState extends State<MainScreen>
   }
 
   // Getter to access PageController from child widgets
+  @override
   PageController get pageController => _pageController;
 }
 
 // Extension to access MainScreen from child widgets
 extension MainScreenExtension on BuildContext {
-  _MainScreenState? get mainScreen => findAncestorStateOfType<_MainScreenState>();
+  MainScreenController? get mainScreen =>
+      findAncestorStateOfType<_MainScreenState>();
 }

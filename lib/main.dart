@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'screens/startup_flow.dart';
 import 'screens/main_screen.dart';
 
 void main() {
@@ -6,7 +8,9 @@ void main() {
 }
 
 class IGasUApp extends StatelessWidget {
-  const IGasUApp({super.key});
+  const IGasUApp({this.showStartupFlow = true, super.key});
+
+  final bool showStartupFlow;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,7 @@ class IGasUApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MainScreen(),
+      home: showStartupFlow ? const StartupFlow() : const MainScreen(),
     );
   }
 }
