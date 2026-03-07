@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'main_screen.dart';
+
+const String onboardingCompletedKey = 'onboarding_completed';
 
 class StartupFlow extends StatefulWidget {
   const StartupFlow({super.key});
@@ -16,7 +19,25 @@ class _StartupFlowState extends State<StartupFlow> {
   @override
   void initState() {
     super.initState();
-    _startSplashDelay();
+    _initializeFlow();
+  }
+
+  Future<void> _initializeFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasCompletedOnboarding =
+        prefs.getBool(onboardingCompletedKey) ?? false;
+    if (!mounted) {
+      return;
+    }
+
+    if (hasCompletedOnboarding) {
+      setState(() {
+        _isFinished = true;
+      });
+      return;
+    }
+
+    await _startSplashDelay();
   }
 
   Future<void> _startSplashDelay() async {
@@ -30,7 +51,13 @@ class _StartupFlowState extends State<StartupFlow> {
     });
   }
 
-  void _finishOnboarding() {
+  void _finishOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(onboardingCompletedKey, true);
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isFinished = true;
     });
@@ -79,8 +106,11 @@ class SplashScreen extends StatelessWidget {
               child: Image.asset(
                 'assets/images/igasu_logo.png',
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.science_outlined, size: 64, color: Color(0xFF4A90E2)),
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.science_outlined,
+                  size: 64,
+                  color: Color(0xFF4A90E2),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -125,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingSlide(
       title: 'Watch Guided Lessons',
       description:
-          'Understand Boyle, Charles, and the Combined Gas Law using clear step-by-step scripts.',
+          'Understand Boyle and Charles gas laws using clear step-by-step scripts.',
       icon: Icons.ondemand_video_outlined,
       color: Color(0xFF4A90E2),
     ),

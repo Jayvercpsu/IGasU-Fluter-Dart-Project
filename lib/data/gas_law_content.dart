@@ -294,23 +294,22 @@ const List<TutorialLesson> tutorialLessons = [
 const List<VideoTutorialReference> videoTutorialReferences = [
   VideoTutorialReference(
     title: 'Boyle\'s Law',
-    duration: '4:30',
+    duration: '2:52',
     videoAssetPath: "assets/videos/BOYLE'S-LAW_Animation.mp4",
     color: Color(0xFF4A90E2),
     type: GasLawType.boyle,
   ),
   VideoTutorialReference(
     title: 'Charles\' Law',
-    duration: '3:12',
+    duration: '3:20',
     videoAssetPath: "assets/videos/CHARLES'-LAW_Animation.mp4",
     color: Color(0xFF5CB85C),
     type: GasLawType.charles,
   ),
   VideoTutorialReference(
     title: 'The Kinetic Molecular Theory',
-    duration: 'Tutorial',
-    videoAssetPath:
-        'assets/videos/The-Kinetic-Molecular-Theory.mp4',
+    duration: '1:20',
+    videoAssetPath: 'assets/videos/The-Kinetic-Molecular-Theory.mp4',
     color: Color(0xFFFF8A3D),
     subtitle: 'Supporting theory for Boyle\'s and Charles\' laws',
   ),

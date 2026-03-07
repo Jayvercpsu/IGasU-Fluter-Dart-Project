@@ -8,7 +8,27 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('iGasU'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/igasu_logo.png',
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(
+                  Icons.science_outlined,
+                  size: 24,
+                  color: Color(0xFF4A90E2),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('iGasU'),
+          ],
+        ),
         centerTitle: true,
       ),
       body: Padding(

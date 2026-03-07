@@ -281,6 +281,7 @@ class VideoTutorialsPage extends StatelessWidget {
                     _AssetVideoPlayer(
                       videoAssetPath: video.videoAssetPath,
                       accentColor: lesson.type.color,
+                      fallbackDurationLabel: video.duration,
                     ),
                     const SizedBox(height: 20),
                     _buildFormulaCard(lesson),
@@ -442,6 +443,7 @@ class VideoTutorialsPage extends StatelessWidget {
               _AssetVideoPlayer(
                 videoAssetPath: video.videoAssetPath,
                 accentColor: video.color,
+                fallbackDurationLabel: video.duration,
               ),
               const Spacer(),
               SizedBox(
@@ -594,31 +596,34 @@ class _AssetVideoPlayer extends StatefulWidget {
   const _AssetVideoPlayer({
     required this.videoAssetPath,
     required this.accentColor,
+    this.fallbackDurationLabel,
   });
 
   final String videoAssetPath;
   final Color accentColor;
+  final String? fallbackDurationLabel;
 
   @override
   State<_AssetVideoPlayer> createState() => _AssetVideoPlayerState();
 }
 
 class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
+  static const Duration _skipDuration = Duration(seconds: 10);
   late final VideoPlayerController _controller;
+  Duration? _fallbackDuration;
+  bool _isScrubbing = false;
+  Duration _scrubPosition = Duration.zero;
   bool _hasInitError = false;
 
   @override
   void initState() {
     super.initState();
+    _fallbackDuration = _parseDurationLabel(widget.fallbackDurationLabel);
     _controller = VideoPlayerController.asset(widget.videoAssetPath);
     _controller
         .initialize()
         .then((_) {
           _controller.setLooping(false);
-          if (!mounted) {
-            return;
-          }
-          setState(() {});
         })
         .catchError((_) {
           if (!mounted) {
@@ -642,65 +647,239 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       return _buildFallback('Unable to load local video file.');
     }
 
-    if (!_controller.value.isInitialized) {
-      return _buildFallback('Loading video...');
-    }
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: _controller,
+      builder: (context, value, _) {
+        if (!value.isInitialized) {
+          return _buildFallback('Loading video...');
+        }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          children: [
-            AspectRatio(
-              aspectRatio: _controller.value.aspectRatio == 0
-                  ? 16 / 9
-                  : _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                AspectRatio(
+                  aspectRatio: value.aspectRatio == 0
+                      ? 16 / 9
+                      : value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
+                _buildControlBar(
+                  context: context,
+                  value: value,
+                  showFullscreenAction: true,
+                ),
+              ],
             ),
-            Container(
-              color: Colors.black87,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildControlBar({
+    required BuildContext context,
+    required VideoPlayerValue value,
+    required bool showFullscreenAction,
+  }) {
+    final totalDuration = _effectiveDuration(value);
+    final currentPosition = _isScrubbing ? _scrubPosition : value.position;
+    final totalMillis = totalDuration.inMilliseconds;
+    final sliderMax = totalMillis <= 0 ? 1.0 : totalMillis.toDouble();
+    final sliderValue = currentPosition.inMilliseconds.clamp(
+      0,
+      sliderMax.toInt(),
+    );
+
+    return Container(
+      color: Colors.black87,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: _togglePlayPause,
+                icon: Icon(
+                  value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _seekBy(-_skipDuration),
+                icon: const Icon(Icons.replay_10, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: () => _seekBy(_skipDuration),
+                icon: const Icon(Icons.forward_10, color: Colors.white),
+              ),
+              if (showFullscreenAction)
+                IconButton(
+                  onPressed: () => _openFullscreenPlayer(context),
+                  icon: const Icon(Icons.fullscreen, color: Colors.white),
+                )
+              else
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.fullscreen_exit, color: Colors.white),
+                ),
+            ],
+          ),
+          Row(
+            children: [
+              Text(
+                _formatDuration(currentPosition),
+                style: const TextStyle(color: Colors.white, fontSize: 11),
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 3,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 6,
+                    ),
+                  ),
+                  child: Slider(
+                    value: sliderValue.toDouble(),
+                    min: 0,
+                    max: sliderMax,
+                    activeColor: widget.accentColor,
+                    inactiveColor: Colors.white24,
+                    onChangeStart: (rawValue) {
                       setState(() {
-                        if (_controller.value.isPlaying) {
-                          _controller.pause();
-                        } else {
-                          _controller.play();
-                        }
+                        _isScrubbing = true;
+                        _scrubPosition = Duration(
+                          milliseconds: rawValue.round(),
+                        );
                       });
                     },
-                    icon: Icon(
-                      _controller.value.isPlaying
-                          ? Icons.pause
-                          : Icons.play_arrow,
-                      color: Colors.white,
-                    ),
+                    onChanged: (rawValue) {
+                      setState(() {
+                        _scrubPosition = Duration(
+                          milliseconds: rawValue.round(),
+                        );
+                      });
+                    },
+                    onChangeEnd: (rawValue) async {
+                      final target = Duration(milliseconds: rawValue.round());
+                      setState(() {
+                        _isScrubbing = false;
+                      });
+                      await _seekTo(target);
+                    },
                   ),
-                  Expanded(
-                    child: VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      colors: VideoProgressColors(
-                        playedColor: widget.accentColor,
-                        bufferedColor: Colors.white54,
-                        backgroundColor: Colors.white24,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_formatDuration(_controller.value.position)} / ${_formatDuration(_controller.value.duration)}',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  ),
-                ],
+                ),
+              ),
+              Text(
+                _formatDuration(totalDuration),
+                style: const TextStyle(color: Colors.white, fontSize: 11),
+              ),
+            ],
+          ),
+          if (value.isBuffering)
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: Colors.white54,
+                backgroundColor: Colors.transparent,
               ),
             ),
-          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _seekBy(Duration offset) async {
+    final value = _controller.value;
+    if (!value.isInitialized) {
+      return;
+    }
+
+    final target = value.position + offset;
+    await _seekTo(target);
+  }
+
+  Future<void> _seekTo(Duration target) async {
+    final value = _controller.value;
+    if (!value.isInitialized) {
+      return;
+    }
+
+    final totalDuration = _effectiveDuration(value);
+    final clamped = target < Duration.zero
+        ? Duration.zero
+        : (totalDuration > Duration.zero && target > totalDuration
+              ? totalDuration
+              : target);
+    final wasPlaying = value.isPlaying;
+    await _controller.pause();
+    await _controller.seekTo(clamped);
+    if (wasPlaying) {
+      await _controller.play();
+    }
+  }
+
+  void _togglePlayPause() {
+    final value = _controller.value;
+    if (value.isPlaying) {
+      _controller.pause();
+      return;
+    }
+    final duration = _effectiveDuration(value);
+    if (duration > Duration.zero && value.position >= duration) {
+      _controller.seekTo(Duration.zero);
+    }
+    _controller.play();
+  }
+
+  Future<void> _openFullscreenPlayer(BuildContext context) {
+    return Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          body: SafeArea(
+            child: ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller,
+              builder: (context, value, _) {
+                if (!value.isInitialized) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: InteractiveViewer(
+                          minScale: 1,
+                          maxScale: 4,
+                          child: AspectRatio(
+                            aspectRatio: value.aspectRatio == 0
+                                ? 16 / 9
+                                : value.aspectRatio,
+                            child: VideoPlayer(_controller),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildControlBar(
+                      context: context,
+                      value: value,
+                      showFullscreenAction: false,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -721,6 +900,48 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
       ),
     );
+  }
+
+  Duration _effectiveDuration(VideoPlayerValue value) {
+    if (value.duration > Duration.zero) {
+      return value.duration;
+    }
+    if (_fallbackDuration != null) {
+      return _fallbackDuration!;
+    }
+    return Duration.zero;
+  }
+
+  Duration? _parseDurationLabel(String? input) {
+    if (input == null) {
+      return null;
+    }
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final parts = trimmed.split(':');
+    if (parts.length == 2) {
+      final minutes = int.tryParse(parts[0]);
+      final seconds = int.tryParse(parts[1]);
+      if (minutes == null || seconds == null) {
+        return null;
+      }
+      return Duration(minutes: minutes, seconds: seconds);
+    }
+
+    if (parts.length == 3) {
+      final hours = int.tryParse(parts[0]);
+      final minutes = int.tryParse(parts[1]);
+      final seconds = int.tryParse(parts[2]);
+      if (hours == null || minutes == null || seconds == null) {
+        return null;
+      }
+      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+    }
+
+    return null;
   }
 
   String _formatDuration(Duration value) {
