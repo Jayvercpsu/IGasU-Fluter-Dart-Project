@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../theme/app_colors.dart';
 import 'main_screen.dart';
 
 class HomePage extends StatelessWidget {
@@ -15,49 +18,78 @@ class HomePage extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/igasu_logo.png',
-                width: 30,
-                height: 30,
+                width: 28,
+                height: 28,
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.science_outlined,
                   size: 24,
-                  color: Color(0xFF4A90E2),
+                  color: AppColors.boyleBlue,
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            const Text('iGasU'),
+            Text(
+              'iGasU',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ],
         ),
-        centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
+            Text(
+              'What do you want to learn?',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Master Gas Laws',
+              style: GoogleFonts.inter(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 28),
             _buildMenuCard(
               context,
               'Video Tutorials',
-              Icons.play_circle_outline,
-              const Color(0xFF4A90E2),
-              () => _navigateWithAnimation(context, 1),
+              'Watch guided lessons on Boyle\'s\nand Charles\' laws',
+              Icons.play_circle_rounded,
+              AppColors.boyleBlue,
+              1,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             _buildMenuCard(
               context,
               'Problem Solving',
-              Icons.quiz_outlined,
-              const Color(0xFF5CB85C),
-              () => _navigateWithAnimation(context, 2),
+              'Practice real problems with\ninstant feedback',
+              Icons.quiz_rounded,
+              AppColors.charlesGreen,
+              2,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             _buildMenuCard(
               context,
               'Learning Dashboard',
-              Icons.dashboard_outlined,
-              const Color(0xFFFF6B6B),
-              () => _navigateWithAnimation(context, 3),
+              'Track your progress and\nreview your scores',
+              Icons.dashboard_rounded,
+              AppColors.errorRed,
+              3,
             ),
           ],
         ),
@@ -68,50 +100,81 @@ class HomePage extends StatelessWidget {
   Widget _buildMenuCard(
     BuildContext context,
     String title,
+    String subtitle,
     IconData icon,
     Color color,
-    VoidCallback onTap,
+    int pageIndex,
   ) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      child: Card(
-        elevation: 8,
-        shadowColor: color.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [color, color.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateWithAnimation(context, pageIndex),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: AppColors.surface,
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: Colors.white, size: 32),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 16,
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: color,
+                  size: 14,
+                ),
+              ),
+            ],
           ),
         ),
       ),

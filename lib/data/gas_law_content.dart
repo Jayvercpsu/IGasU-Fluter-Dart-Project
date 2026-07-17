@@ -100,12 +100,21 @@ class GivenField {
   final String unit;
 }
 
+class AnswerChoice {
+  const AnswerChoice({required this.label, required this.text});
+
+  final String label;
+  final String text;
+}
+
 class PracticeProblem {
   PracticeProblem.boyle({
     required this.question,
     required this.p1,
     required this.v1,
     required this.p2,
+    required this.choices,
+    required this.correctChoiceLabel,
   }) : type = GasLawType.boyle,
        t1 = null,
        t2 = null;
@@ -115,6 +124,8 @@ class PracticeProblem {
     required this.v1,
     required this.t1,
     required this.t2,
+    required this.choices,
+    required this.correctChoiceLabel,
   }) : type = GasLawType.charles,
        p1 = null,
        p2 = null;
@@ -126,6 +137,12 @@ class PracticeProblem {
   final double? p2;
   final double? t1;
   final double? t2;
+  final List<AnswerChoice> choices;
+  final String correctChoiceLabel;
+
+  AnswerChoice get correctChoice {
+    return choices.firstWhere((choice) => choice.label == correctChoiceLabel);
+  }
 
   List<GivenField> get givenFields {
     switch (type) {
@@ -322,6 +339,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 2,
     v1: 4,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '1L'),
+      AnswerChoice(label: 'B', text: '2L'),
+      AnswerChoice(label: 'C', text: '4L'),
+      AnswerChoice(label: 'D', text: '8L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -329,6 +353,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 6,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '12L'),
+      AnswerChoice(label: 'B', text: '9L'),
+      AnswerChoice(label: 'C', text: '18L'),
+      AnswerChoice(label: 'D', text: '24L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -336,6 +367,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 10,
     p2: 10,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.4L'),
+      AnswerChoice(label: 'B', text: '5L'),
+      AnswerChoice(label: 'C', text: '10L'),
+      AnswerChoice(label: 'D', text: '20L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -343,6 +381,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 2,
     v1: 8,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2L'),
+      AnswerChoice(label: 'B', text: '6L'),
+      AnswerChoice(label: 'C', text: '4L'),
+      AnswerChoice(label: 'D', text: '8L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -350,6 +395,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 12,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6L'),
+      AnswerChoice(label: 'B', text: '12L'),
+      AnswerChoice(label: 'C', text: '15L'),
+      AnswerChoice(label: 'D', text: '18L'),
+    ],
+    correctChoiceLabel: 'D',
   ),
   PracticeProblem.boyle(
     question:
@@ -357,6 +409,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 15,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '20L'),
+      AnswerChoice(label: 'B', text: '25L'),
+      AnswerChoice(label: 'C', text: '30L'),
+      AnswerChoice(label: 'D', text: '35L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -364,6 +423,27 @@ final List<PracticeProblem> practiceProblems = [
     p1: 1,
     v1: 7,
     p2: 7,
+    choices: const [
+      AnswerChoice(label: 'A', text: '0.5L'),
+      AnswerChoice(label: 'B', text: '1L'),
+      AnswerChoice(label: 'C', text: '7L'),
+      AnswerChoice(label: 'D', text: '14L'),
+    ],
+    correctChoiceLabel: 'B',
+  ),
+  PracticeProblem.boyle(
+    question:
+        'A gas occupies 9 L at 3 atm. If pressure becomes 6 atm, find the new volume.',
+    p1: 3,
+    v1: 9,
+    p2: 6,
+    choices: const [
+      AnswerChoice(label: 'A', text: '3L'),
+      AnswerChoice(label: 'B', text: '4.5L'),
+      AnswerChoice(label: 'C', text: '6L'),
+      AnswerChoice(label: 'D', text: '9L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -371,6 +451,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 2,
     v1: 20,
     p2: 5,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5L'),
+      AnswerChoice(label: 'B', text: '8L'),
+      AnswerChoice(label: 'C', text: '10L'),
+      AnswerChoice(label: 'D', text: '20L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -378,6 +465,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 4,
     v1: 16,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '16L'),
+      AnswerChoice(label: 'B', text: '32L'),
+      AnswerChoice(label: 'C', text: '24L'),
+      AnswerChoice(label: 'D', text: '64L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -385,6 +479,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 30,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '60L'),
+      AnswerChoice(label: 'B', text: '75L'),
+      AnswerChoice(label: 'C', text: '90L'),
+      AnswerChoice(label: 'D', text: '150L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -392,6 +493,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 6,
     v1: 12,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '12L'),
+      AnswerChoice(label: 'B', text: '24L'),
+      AnswerChoice(label: 'C', text: '26L'),
+      AnswerChoice(label: 'D', text: '48L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -399,6 +507,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 10,
     v1: 20,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '40L'),
+      AnswerChoice(label: 'B', text: '50L'),
+      AnswerChoice(label: 'C', text: '60L'),
+      AnswerChoice(label: 'D', text: '80L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -406,6 +521,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 9,
     v1: 18,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '27L'),
+      AnswerChoice(label: 'B', text: '36L'),
+      AnswerChoice(label: 'C', text: '54L'),
+      AnswerChoice(label: 'D', text: '72L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -413,6 +535,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 8,
     v1: 16,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '16L'),
+      AnswerChoice(label: 'B', text: '32L'),
+      AnswerChoice(label: 'C', text: '48L'),
+      AnswerChoice(label: 'D', text: '64L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -420,6 +549,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 10,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '15L'),
+      AnswerChoice(label: 'B', text: '20L'),
+      AnswerChoice(label: 'C', text: '25L'),
+      AnswerChoice(label: 'D', text: '30'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -427,6 +563,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 8,
     v1: 40,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '80L'),
+      AnswerChoice(label: 'B', text: '120L'),
+      AnswerChoice(label: 'C', text: '160L'),
+      AnswerChoice(label: 'D', text: '200L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -434,6 +577,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 7,
     v1: 14,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '49L'),
+      AnswerChoice(label: 'B', text: '84L'),
+      AnswerChoice(label: 'C', text: '98L'),
+      AnswerChoice(label: 'D', text: '112L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -441,6 +591,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 11,
     v1: 22,
     p2: 5,
+    choices: const [
+      AnswerChoice(label: 'A', text: '44L'),
+      AnswerChoice(label: 'B', text: '46.2'),
+      AnswerChoice(label: 'C', text: '48.4L'),
+      AnswerChoice(label: 'D', text: '52L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -448,6 +605,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 10,
     v1: 50,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '100L'),
+      AnswerChoice(label: 'B', text: '150L'),
+      AnswerChoice(label: 'C', text: '250L'),
+      AnswerChoice(label: 'D', text: '500L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -455,13 +619,27 @@ final List<PracticeProblem> practiceProblems = [
     p1: 12,
     v1: 24,
     p2: 6,
+    choices: const [
+      AnswerChoice(label: 'A', text: '24L'),
+      AnswerChoice(label: 'B', text: '48L'),
+      AnswerChoice(label: 'C', text: '72L'),
+      AnswerChoice(label: 'D', text: '96L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
-        'A deep-sea submarine air pocket measures 35 L at 7 atm. If the pressure changes to 5 atm, what is the new volume?',
+        'A deep -sea submarine air pocket measures 35 L at 7 atm. If the pressure changes to 5 atm, what is the new volume?',
     p1: 7,
     v1: 35,
     p2: 5,
+    choices: const [
+      AnswerChoice(label: 'A', text: '35L'),
+      AnswerChoice(label: 'B', text: '42L'),
+      AnswerChoice(label: 'C', text: '49L'),
+      AnswerChoice(label: 'D', text: '56L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -469,6 +647,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 14,
     v1: 28,
     p2: 7,
+    choices: const [
+      AnswerChoice(label: 'A', text: '42L'),
+      AnswerChoice(label: 'B', text: '49L'),
+      AnswerChoice(label: 'C', text: '56L'),
+      AnswerChoice(label: 'D', text: '70L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -476,6 +661,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 21,
     p2: 9,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5L'),
+      AnswerChoice(label: 'B', text: '7L'),
+      AnswerChoice(label: 'C', text: '9L'),
+      AnswerChoice(label: 'D', text: '12L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -483,6 +675,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 6,
     v1: 60,
     p2: 15,
+    choices: const [
+      AnswerChoice(label: 'A', text: '18L'),
+      AnswerChoice(label: 'B', text: '20L'),
+      AnswerChoice(label: 'C', text: '24L'),
+      AnswerChoice(label: 'D', text: '30L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -490,6 +689,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 8,
     v1: 32,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '32L'),
+      AnswerChoice(label: 'B', text: '64L'),
+      AnswerChoice(label: 'C', text: '96L'),
+      AnswerChoice(label: 'D', text: '128L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -497,6 +703,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 15,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '30L'),
+      AnswerChoice(label: 'B', text: '36L'),
+      AnswerChoice(label: 'C', text: '45L'),
+      AnswerChoice(label: 'D', text: '60L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -504,6 +717,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 20,
     p2: 10,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5L'),
+      AnswerChoice(label: 'B', text: '10L'),
+      AnswerChoice(label: 'C', text: '20L'),
+      AnswerChoice(label: 'D', text: '40L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -511,6 +731,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 6,
     v1: 18,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '18L'),
+      AnswerChoice(label: 'B', text: '36L'),
+      AnswerChoice(label: 'C', text: '54L'),
+      AnswerChoice(label: 'D', text: '72L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -518,6 +745,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 4,
     v1: 12,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '12L'),
+      AnswerChoice(label: 'B', text: '24L'),
+      AnswerChoice(label: 'C', text: '36L'),
+      AnswerChoice(label: 'D', text: '48L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -525,6 +759,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 10,
     v1: 50,
     p2: 5,
+    choices: const [
+      AnswerChoice(label: 'A', text: '50L'),
+      AnswerChoice(label: 'B', text: '75L'),
+      AnswerChoice(label: 'C', text: '100L'),
+      AnswerChoice(label: 'D', text: '150L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -532,6 +773,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 8,
     v1: 40,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '40L'),
+      AnswerChoice(label: 'B', text: '80L'),
+      AnswerChoice(label: 'C', text: '120L'),
+      AnswerChoice(label: 'D', text: '160L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -539,6 +787,27 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 9,
     p2: 9,
+    choices: const [
+      AnswerChoice(label: 'A', text: '1L'),
+      AnswerChoice(label: 'B', text: '2L'),
+      AnswerChoice(label: 'C', text: '3L'),
+      AnswerChoice(label: 'D', text: '6L'),
+    ],
+    correctChoiceLabel: 'C',
+  ),
+  PracticeProblem.boyle(
+    question:
+        'A rubber balloon contains 25 L of gas at 5 atm. If the pressure becomes 1 atm, what is the new volume?',
+    p1: 5,
+    v1: 25,
+    p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '50L'),
+      AnswerChoice(label: 'B', text: '75L'),
+      AnswerChoice(label: 'C', text: '125L'),
+      AnswerChoice(label: 'D', text: '150L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -546,6 +815,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 6,
     v1: 30,
     p2: 12,
+    choices: const [
+      AnswerChoice(label: 'A', text: '10L'),
+      AnswerChoice(label: 'B', text: '15L'),
+      AnswerChoice(label: 'C', text: '20L'),
+      AnswerChoice(label: 'D', text: '25L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -553,6 +829,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 7,
     v1: 14,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '56L'),
+      AnswerChoice(label: 'B', text: '84L'),
+      AnswerChoice(label: 'C', text: '98L'),
+      AnswerChoice(label: 'D', text: '112L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -560,6 +843,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 8,
     v1: 16,
     p2: 4,
+    choices: const [
+      AnswerChoice(label: 'A', text: '16L'),
+      AnswerChoice(label: 'B', text: '32L'),
+      AnswerChoice(label: 'C', text: '48L'),
+      AnswerChoice(label: 'D', text: '64L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -567,6 +857,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 3,
     v1: 60,
     p2: 9,
+    choices: const [
+      AnswerChoice(label: 'A', text: '15L'),
+      AnswerChoice(label: 'B', text: '20L'),
+      AnswerChoice(label: 'C', text: '30L'),
+      AnswerChoice(label: 'D', text: '40'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -574,6 +871,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 11,
     v1: 11,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '99L'),
+      AnswerChoice(label: 'B', text: '110L'),
+      AnswerChoice(label: 'C', text: '121L'),
+      AnswerChoice(label: 'D', text: '132L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -581,6 +885,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 12,
     v1: 24,
     p2: 6,
+    choices: const [
+      AnswerChoice(label: 'A', text: '24L'),
+      AnswerChoice(label: 'B', text: '48L'),
+      AnswerChoice(label: 'C', text: '72L'),
+      AnswerChoice(label: 'D', text: '96L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -588,6 +899,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 7,
     v1: 28,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '112L'),
+      AnswerChoice(label: 'B', text: '168L'),
+      AnswerChoice(label: 'C', text: '196L'),
+      AnswerChoice(label: 'D', text: '224L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -595,13 +913,27 @@ final List<PracticeProblem> practiceProblems = [
     p1: 5,
     v1: 10,
     p2: 10,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2L'),
+      AnswerChoice(label: 'B', text: '5L'),
+      AnswerChoice(label: 'C', text: '10L'),
+      AnswerChoice(label: 'D', text: '20L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
-        'A scuba diver\'s air bag contains 18 L of air at 6 atm. If the pressure decreases to 3 atm, what is the new volume?',
+        'A scuba diver’s air bag contains 18 L of air at 6 atm. If the pressure decreases to 3 atm, what is the new volume?',
     p1: 6,
     v1: 18,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '18L'),
+      AnswerChoice(label: 'B', text: '24L'),
+      AnswerChoice(label: 'C', text: '36L'),
+      AnswerChoice(label: 'D', text: '54L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -609,6 +941,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 2,
     v1: 22,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '22L'),
+      AnswerChoice(label: 'B', text: '33L'),
+      AnswerChoice(label: 'C', text: '44L'),
+      AnswerChoice(label: 'D', text: '66L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -616,6 +955,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 7,
     v1: 35,
     p2: 14,
+    choices: const [
+      AnswerChoice(label: 'A', text: '14L'),
+      AnswerChoice(label: 'B', text: '17.5L'),
+      AnswerChoice(label: 'C', text: '21L'),
+      AnswerChoice(label: 'D', text: '35L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -623,6 +969,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 4,
     v1: 16,
     p2: 2,
+    choices: const [
+      AnswerChoice(label: 'A', text: '16L'),
+      AnswerChoice(label: 'B', text: '32L'),
+      AnswerChoice(label: 'C', text: '48L'),
+      AnswerChoice(label: 'D', text: '64L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -630,13 +983,27 @@ final List<PracticeProblem> practiceProblems = [
     p1: 9,
     v1: 45,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '45L'),
+      AnswerChoice(label: 'B', text: '90L'),
+      AnswerChoice(label: 'C', text: '135L'),
+      AnswerChoice(label: 'D', text: '180L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
-        'Air trapped inside a metal container occupies 12 L at 6 atm. If the pressure increases to 12 atm, what is the new volume?',
+        'trapped inside a metal container occupies 12 L at 6 atm. If the pressure increases to 12 atm, what is the new volume?',
     p1: 6,
     v1: 12,
     p2: 12,
+    choices: const [
+      AnswerChoice(label: 'A', text: '3L'),
+      AnswerChoice(label: 'B', text: '6L'),
+      AnswerChoice(label: 'C', text: '12L'),
+      AnswerChoice(label: 'D', text: '24'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.boyle(
     question:
@@ -644,6 +1011,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 9,
     v1: 27,
     p2: 3,
+    choices: const [
+      AnswerChoice(label: 'A', text: '54L'),
+      AnswerChoice(label: 'B', text: '72L'),
+      AnswerChoice(label: 'C', text: '81L'),
+      AnswerChoice(label: 'D', text: '108L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.boyle(
     question:
@@ -651,6 +1025,13 @@ final List<PracticeProblem> practiceProblems = [
     p1: 4,
     v1: 20,
     p2: 1,
+    choices: const [
+      AnswerChoice(label: 'A', text: '40L'),
+      AnswerChoice(label: 'B', text: '60L'),
+      AnswerChoice(label: 'C', text: '80L'),
+      AnswerChoice(label: 'D', text: '100L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -658,6 +1039,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 2.5,
     t1: 290,
     t2: 330,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.65 L'),
+      AnswerChoice(label: 'B', text: '2.84 L'),
+      AnswerChoice(label: 'C', text: '3.02 L'),
+      AnswerChoice(label: 'D', text: '3.20 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -665,6 +1053,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 3.2,
     t1: 300,
     t2: 360,
+    choices: const [
+      AnswerChoice(label: 'A', text: '3.64 L'),
+      AnswerChoice(label: 'B', text: '3.84 L'),
+      AnswerChoice(label: 'C', text: '4.02 L'),
+      AnswerChoice(label: 'D', text: '4.20 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -672,6 +1067,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 1.8,
     t1: 280,
     t2: 350,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.05 L'),
+      AnswerChoice(label: 'B', text: '2.15 L'),
+      AnswerChoice(label: 'C', text: '2.25 L'),
+      AnswerChoice(label: 'D', text: '2.45 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -679,6 +1081,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 5.6,
     t1: 310,
     t2: 400,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.82 L'),
+      AnswerChoice(label: 'B', text: '7.05 L'),
+      AnswerChoice(label: 'C', text: '7.23 L'),
+      AnswerChoice(label: 'D', text: '7.50 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -686,6 +1095,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 7.5,
     t1: 350,
     t2: 300,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.21 L'),
+      AnswerChoice(label: 'B', text: '6.43 L'),
+      AnswerChoice(label: 'C', text: '6.60 L'),
+      AnswerChoice(label: 'D', text: '6.85 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -693,6 +1109,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 9,
     t1: 320,
     t2: 380,
+    choices: const [
+      AnswerChoice(label: 'A', text: '10.12 L'),
+      AnswerChoice(label: 'B', text: '10.45 L'),
+      AnswerChoice(label: 'C', text: '10.69 L'),
+      AnswerChoice(label: 'D', text: '10.90 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -700,12 +1123,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 4.4,
     t1: 295,
     t2: 355,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.12 L'),
+      AnswerChoice(label: 'B', text: '5.30 L'),
+      AnswerChoice(label: 'C', text: '5.48 L'),
+      AnswerChoice(label: 'D', text: '5.62 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas has a volume of 6.2 L at 305 K. Find its volume at 370 K.',
     v1: 6.2,
     t1: 305,
     t2: 370,
+    choices: const [
+      AnswerChoice(label: 'A', text: '7.18 L'),
+      AnswerChoice(label: 'B', text: '7.36 L'),
+      AnswerChoice(label: 'C', text: '7.52 L'),
+      AnswerChoice(label: 'D', text: '7.80 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -713,6 +1150,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 8.5,
     t1: 315,
     t2: 420,
+    choices: const [
+      AnswerChoice(label: 'A', text: '10.92 L'),
+      AnswerChoice(label: 'B', text: '11.15 L'),
+      AnswerChoice(label: 'C', text: '11.33 L'),
+      AnswerChoice(label: 'D', text: '11.60 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -720,6 +1164,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 10.2,
     t1: 330,
     t2: 390,
+    choices: const [
+      AnswerChoice(label: 'A', text: '11.82 L'),
+      AnswerChoice(label: 'B', text: '12.05 L'),
+      AnswerChoice(label: 'C', text: '12.25 L'),
+      AnswerChoice(label: 'D', text: '12.50 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -727,6 +1178,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 3.9,
     t1: 275,
     t2: 340,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.55 L'),
+      AnswerChoice(label: 'B', text: '4.82 L'),
+      AnswerChoice(label: 'C', text: '5.02 L'),
+      AnswerChoice(label: 'D', text: '5.20 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -734,12 +1192,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 5,
     t1: 290,
     t2: 350,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.82 L'),
+      AnswerChoice(label: 'B', text: '6.03 L'),
+      AnswerChoice(label: 'C', text: '6.20 L'),
+      AnswerChoice(label: 'D', text: '6.35 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 6.8 L at 300 K. What is its volume at 420 K?',
     v1: 6.8,
     t1: 300,
     t2: 420,
+    choices: const [
+      AnswerChoice(label: 'A', text: '9.12 L'),
+      AnswerChoice(label: 'B', text: '9.34 L'),
+      AnswerChoice(label: 'C', text: '9.52 L'),
+      AnswerChoice(label: 'D', text: '9.80 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -747,6 +1219,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 2.1,
     t1: 285,
     t2: 345,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.35 L'),
+      AnswerChoice(label: 'B', text: '2.54 L'),
+      AnswerChoice(label: 'C', text: '2.71 L'),
+      AnswerChoice(label: 'D', text: '2.90 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -754,12 +1233,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 4.7,
     t1: 295,
     t2: 365,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.54 L'),
+      AnswerChoice(label: 'B', text: '5.82 L'),
+      AnswerChoice(label: 'C', text: '6.01 L'),
+      AnswerChoice(label: 'D', text: '6.20 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 8.3 L at 310 K. What is its volume at 450 K?',
     v1: 8.3,
     t1: 310,
     t2: 450,
+    choices: const [
+      AnswerChoice(label: 'A', text: '11.75 L'),
+      AnswerChoice(label: 'B', text: '12.05 L'),
+      AnswerChoice(label: 'C', text: '12.30 L'),
+      AnswerChoice(label: 'D', text: '12.55 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -767,12 +1260,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 1.9,
     t1: 260,
     t2: 300,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.05 L'),
+      AnswerChoice(label: 'B', text: '2.19 L'),
+      AnswerChoice(label: 'C', text: '2.32 L'),
+      AnswerChoice(label: 'D', text: '2.48 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 7.1 L at 315 K. What is its volume at 380 K?',
     v1: 7.1,
     t1: 315,
     t2: 380,
+    choices: const [
+      AnswerChoice(label: 'A', text: '8.22 L'),
+      AnswerChoice(label: 'B', text: '8.57 L'),
+      AnswerChoice(label: 'C', text: '8.82 L'),
+      AnswerChoice(label: 'D', text: '9.04 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -780,6 +1287,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 5.9,
     t1: 300,
     t2: 360,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.82 L'),
+      AnswerChoice(label: 'B', text: '7.08 L'),
+      AnswerChoice(label: 'C', text: '7.24 L'),
+      AnswerChoice(label: 'D', text: '7.50 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
@@ -787,71 +1301,150 @@ final List<PracticeProblem> practiceProblems = [
     v1: 4.3,
     t1: 275,
     t2: 350,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.24 L'),
+      AnswerChoice(label: 'B', text: '5.47 L'),
+      AnswerChoice(label: 'C', text: '5.70 L'),
+      AnswerChoice(label: 'D', text: '5.92 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
-        'A gas occupies 6.4 L at 290 K. What will be the volume at 410 K?',
-    v1: 6.4,
-    t1: 290,
-    t2: 410,
-  ),
-  PracticeProblem.charles(
-    question: 'A gas occupies 9.7 L at 320 K. What is the volume at 390 K?',
-    v1: 9.7,
-    t1: 320,
-    t2: 390,
-  ),
-  PracticeProblem.charles(
-    question:
-        'A gas occupies 2.8 L at 280 K. What will be its volume at 340 K?',
-    v1: 2.8,
-    t1: 280,
+        'A gas occupies 3.9 L at 275 K. What will be its volume at 340 K?',
+    v1: 3.9,
+    t1: 275,
     t2: 340,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.21 L'),
+      AnswerChoice(label: 'B', text: '4.82 L'),
+      AnswerChoice(label: 'C', text: '5.10 L'),
+      AnswerChoice(label: 'D', text: '5.82 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question:
-        'A gas occupies 7.6 L at 305 K. What volume will it occupy at 390 K?',
-    v1: 7.6,
-    t1: 305,
-    t2: 390,
-  ),
-  PracticeProblem.charles(
-    question:
-        'A gas occupies 3.5 L at 295 K. What will be its volume at 365 K?',
-    v1: 3.5,
-    t1: 295,
-    t2: 365,
-  ),
-  PracticeProblem.charles(
-    question: 'A gas occupies 5.5 L at 290 K. Find its volume at 360 K.',
-    v1: 5.5,
+        'A gas occupies 5.0 L at 290 K. What will be the volume at 350 K?',
+    v1: 5,
     t1: 290,
-    t2: 360,
+    t2: 350,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.85 L'),
+      AnswerChoice(label: 'B', text: '6.03 L'),
+      AnswerChoice(label: 'C', text: '6.50 L'),
+      AnswerChoice(label: 'D', text: '6.83 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
-    question:
-        'A balloon of gas has a volume of 6.3 L at 310 K. What is its volume at 390 K?',
-    v1: 6.3,
-    t1: 310,
-    t2: 390,
-  ),
-  PracticeProblem.charles(
-    question: 'A gas occupies 8.1 L at 300 K. Determine its volume at 420 K.',
-    v1: 8.1,
+    question: 'A gas occupies 6.8 L at 300 K. What is its volume at 420 K?',
+    v1: 6.8,
     t1: 300,
     t2: 420,
+    choices: const [
+      AnswerChoice(label: 'A', text: '8.52 L'),
+      AnswerChoice(label: 'B', text: '9.12 L'),
+      AnswerChoice(label: 'C', text: '9.52 L'),
+      AnswerChoice(label: 'D', text: '10.02 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
-    question: 'A gas has a volume of 2.6 L at 280 K. Find its volume at 350 K.',
-    v1: 2.6,
-    t1: 280,
-    t2: 350,
+    question:
+        'A gas has a volume of 2.1 L at 285 K. What is its volume at 345 K?',
+    v1: 2.1,
+    t1: 285,
+    t2: 345,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.34 L'),
+      AnswerChoice(label: 'B', text: '2.54 L'),
+      AnswerChoice(label: 'C', text: '2.74 L'),
+      AnswerChoice(label: 'D', text: '2.94 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
-    question: 'A gas occupies 4.8 L at 295 K. What is its volume at 370 K?',
-    v1: 4.8,
+    question:
+        'A gas occupies 4.7 L at 295 K. What volume will it have at 365 K?',
+    v1: 4.7,
     t1: 295,
-    t2: 370,
+    t2: 365,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.42 L'),
+      AnswerChoice(label: 'B', text: '5.62 L'),
+      AnswerChoice(label: 'C', text: '5.82 L'),
+      AnswerChoice(label: 'D', text: '6.02 L'),
+    ],
+    correctChoiceLabel: 'C',
+  ),
+  PracticeProblem.charles(
+    question: 'A gas occupies 8.3 L at 310 K. What is its volume at 450 K?',
+    v1: 8.3,
+    t1: 310,
+    t2: 450,
+    choices: const [
+      AnswerChoice(label: 'A', text: '11.05 L'),
+      AnswerChoice(label: 'B', text: '11.55 L'),
+      AnswerChoice(label: 'C', text: '12.05 L'),
+      AnswerChoice(label: 'D', text: '12.55 L'),
+    ],
+    correctChoiceLabel: 'C',
+  ),
+  PracticeProblem.charles(
+    question:
+        'A gas occupies 1.9 L at 260 K. What will be its volume at 300 K?',
+    v1: 1.9,
+    t1: 260,
+    t2: 300,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.09 L'),
+      AnswerChoice(label: 'B', text: '2.19 L'),
+      AnswerChoice(label: 'C', text: '2.29 L'),
+      AnswerChoice(label: 'D', text: '2.39 L'),
+    ],
+    correctChoiceLabel: 'B',
+  ),
+  PracticeProblem.charles(
+    question: 'A gas occupies 7.1 L at 315 K. What is its volume at 380 K?',
+    v1: 7.1,
+    t1: 315,
+    t2: 380,
+    choices: const [
+      AnswerChoice(label: 'A', text: '8.37 L'),
+      AnswerChoice(label: 'B', text: '8.57 L'),
+      AnswerChoice(label: 'C', text: '8.77 L'),
+      AnswerChoice(label: 'D', text: '8.97 L'),
+    ],
+    correctChoiceLabel: 'B',
+  ),
+  PracticeProblem.charles(
+    question:
+        'A gas occupies 5.9 L at 300 K. What will be the volume at 360 K?',
+    v1: 5.9,
+    t1: 300,
+    t2: 360,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.88 L'),
+      AnswerChoice(label: 'B', text: '7.08 L'),
+      AnswerChoice(label: 'C', text: '7.28 L'),
+      AnswerChoice(label: 'D', text: '7.48 L'),
+    ],
+    correctChoiceLabel: 'B',
+  ),
+  PracticeProblem.charles(
+    question:
+        'A gas occupies 4.3 L at 275 K. What volume will it occupy at 350 K?',
+    v1: 4.3,
+    t1: 275,
+    t2: 350,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.07 L'),
+      AnswerChoice(label: 'B', text: '5.27 L'),
+      AnswerChoice(label: 'C', text: '5.47 L'),
+      AnswerChoice(label: 'D', text: '5.67 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -859,12 +1452,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 9.2,
     t1: 320,
     t2: 400,
+    choices: const [
+      AnswerChoice(label: 'A', text: '11.10 L'),
+      AnswerChoice(label: 'B', text: '11.30 L'),
+      AnswerChoice(label: 'C', text: '11.70 L'),
+      AnswerChoice(label: 'D', text: '11.50 L'),
+    ],
+    correctChoiceLabel: 'D',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 3.4 L at 270 K. Find its volume at 330 K.',
     v1: 3.4,
     t1: 270,
     t2: 330,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.16 L'),
+      AnswerChoice(label: 'B', text: '4.06 L'),
+      AnswerChoice(label: 'C', text: '4.96 L'),
+      AnswerChoice(label: 'D', text: '4.26 L'),
+    ],
+    correctChoiceLabel: 'A',
   ),
   PracticeProblem.charles(
     question:
@@ -872,12 +1479,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 7.8,
     t1: 305,
     t2: 385,
+    choices: const [
+      AnswerChoice(label: 'A', text: '9.45 L'),
+      AnswerChoice(label: 'B', text: '9.65 L'),
+      AnswerChoice(label: 'C', text: '9.85 L'),
+      AnswerChoice(label: 'D', text: '10.05 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 5.1 L at 290 K. Find its volume at 355 K.',
     v1: 5.1,
     t1: 290,
     t2: 355,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.04 L'),
+      AnswerChoice(label: 'B', text: '6.14 L'),
+      AnswerChoice(label: 'C', text: '6.24 L'),
+      AnswerChoice(label: 'D', text: '6.34 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -885,6 +1506,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 6.7,
     t1: 315,
     t2: 395,
+    choices: const [
+      AnswerChoice(label: 'A', text: '8.20 L'),
+      AnswerChoice(label: 'B', text: '8.30 L'),
+      AnswerChoice(label: 'C', text: '8.50 L'),
+      AnswerChoice(label: 'D', text: '8.40 L'),
+    ],
+    correctChoiceLabel: 'D',
   ),
   PracticeProblem.charles(
     question:
@@ -892,12 +1520,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 2.3,
     t1: 275,
     t2: 340,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.64 L'),
+      AnswerChoice(label: 'B', text: '2.84 L'),
+      AnswerChoice(label: 'C', text: '2.64 L'),
+      AnswerChoice(label: 'D', text: '2.94 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 8.9 L at 320 K. Determine its volume at 430 K.',
     v1: 8.9,
     t1: 320,
     t2: 430,
+    choices: const [
+      AnswerChoice(label: 'A', text: '11.56 L'),
+      AnswerChoice(label: 'B', text: '11.76 L'),
+      AnswerChoice(label: 'C', text: '11.96 L'),
+      AnswerChoice(label: 'D', text: '12.16 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -905,12 +1547,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 4,
     t1: 285,
     t2: 345,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.64 L'),
+      AnswerChoice(label: 'B', text: '4.84 L'),
+      AnswerChoice(label: 'C', text: '4.74 L'),
+      AnswerChoice(label: 'D', text: '4.94 L'),
+    ],
+    correctChoiceLabel: 'B',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 5.6 L at 300 K. Find its volume at 380 K.',
     v1: 5.6,
     t1: 300,
     t2: 380,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.89 L'),
+      AnswerChoice(label: 'B', text: '6.99 L'),
+      AnswerChoice(label: 'C', text: '7.09 L'),
+      AnswerChoice(label: 'D', text: '7.19 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -918,6 +1574,13 @@ final List<PracticeProblem> practiceProblems = [
     v1: 3.7,
     t1: 290,
     t2: 355,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.33 L'),
+      AnswerChoice(label: 'B', text: '4.43 L'),
+      AnswerChoice(label: 'C', text: '4.53 L'),
+      AnswerChoice(label: 'D', text: '4.63 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -925,12 +1588,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 2.9,
     t1: 280,
     t2: 330,
+    choices: const [
+      AnswerChoice(label: 'A', text: '3.22 L'),
+      AnswerChoice(label: 'B', text: '3.32 L'),
+      AnswerChoice(label: 'C', text: '3.52 L'),
+      AnswerChoice(label: 'D', text: '3.42 L'),
+    ],
+    correctChoiceLabel: 'D',
   ),
   PracticeProblem.charles(
     question: 'A gas has a volume of 7.5 L at 310 K. Find its volume at 385 K.',
     v1: 7.5,
     t1: 310,
     t2: 385,
+    choices: const [
+      AnswerChoice(label: 'A', text: '9.11 L'),
+      AnswerChoice(label: 'B', text: '9.21 L'),
+      AnswerChoice(label: 'C', text: '9.41 L'),
+      AnswerChoice(label: 'D', text: '9.31 L'),
+    ],
+    correctChoiceLabel: 'D',
   ),
   PracticeProblem.charles(
     question:
@@ -938,12 +1615,26 @@ final List<PracticeProblem> practiceProblems = [
     v1: 4.2,
     t1: 290,
     t2: 345,
+    choices: const [
+      AnswerChoice(label: 'A', text: '4.79 L'),
+      AnswerChoice(label: 'B', text: '4.89 L'),
+      AnswerChoice(label: 'C', text: '4.99 L'),
+      AnswerChoice(label: 'D', text: '5.09 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 6.8 L at 305 K. Determine its volume at 390 K.',
     v1: 6.8,
     t1: 305,
     t2: 390,
+    choices: const [
+      AnswerChoice(label: 'A', text: '8.49 L'),
+      AnswerChoice(label: 'B', text: '8.59 L'),
+      AnswerChoice(label: 'C', text: '8.69 L'),
+      AnswerChoice(label: 'D', text: '8.79 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -951,18 +1642,39 @@ final List<PracticeProblem> practiceProblems = [
     v1: 3.3,
     t1: 275,
     t2: 325,
+    choices: const [
+      AnswerChoice(label: 'A', text: '3.70 L'),
+      AnswerChoice(label: 'B', text: '3.80 L'),
+      AnswerChoice(label: 'C', text: '3.90 L'),
+      AnswerChoice(label: 'D', text: '4.00 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 9.4 L at 315 K. Find its volume at 430 K.',
     v1: 9.4,
     t1: 315,
     t2: 430,
+    choices: const [
+      AnswerChoice(label: 'A', text: '12.43 L'),
+      AnswerChoice(label: 'B', text: '12.63 L'),
+      AnswerChoice(label: 'C', text: '12.83 L'),
+      AnswerChoice(label: 'D', text: '13.03 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 5.7 L at 300 K. Determine its volume at 360 K.',
     v1: 5.7,
     t1: 300,
     t2: 360,
+    choices: const [
+      AnswerChoice(label: 'A', text: '6.64 L'),
+      AnswerChoice(label: 'B', text: '6.74 L'),
+      AnswerChoice(label: 'C', text: '6.84 L'),
+      AnswerChoice(label: 'D', text: '6.94 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question:
@@ -970,51 +1682,39 @@ final List<PracticeProblem> practiceProblems = [
     v1: 2.5,
     t1: 285,
     t2: 340,
+    choices: const [
+      AnswerChoice(label: 'A', text: '2.78 L'),
+      AnswerChoice(label: 'B', text: '2.88 L'),
+      AnswerChoice(label: 'C', text: '2.98 L'),
+      AnswerChoice(label: 'D', text: '3.08 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 7.2 L at 310 K. What is its volume at 400 K?',
     v1: 7.2,
     t1: 310,
     t2: 400,
+    choices: const [
+      AnswerChoice(label: 'A', text: '9.09 L'),
+      AnswerChoice(label: 'B', text: '9.19 L'),
+      AnswerChoice(label: 'C', text: '9.29 L'),
+      AnswerChoice(label: 'D', text: '9.39 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
   PracticeProblem.charles(
     question: 'A gas occupies 4.5 L at 295 K. Determine its volume at 355 K.',
     v1: 4.5,
     t1: 295,
     t2: 355,
-  ),
-  PracticeProblem.charles(
-    question:
-        'A gas has a volume of 6.0 L at 300 K. Find the new volume at 375 K.',
-    v1: 6,
-    t1: 300,
-    t2: 375,
-  ),
-  PracticeProblem.charles(
-    question:
-        'A gas occupies 3.8 L at 285 K. What will be its volume at 345 K?',
-    v1: 3.8,
-    t1: 285,
-    t2: 345,
-  ),
-  PracticeProblem.charles(
-    question: 'A gas occupies 8.6 L at 320 K. Determine its volume at 400 K.',
-    v1: 8.6,
-    t1: 320,
-    t2: 400,
-  ),
-  PracticeProblem.charles(
-    question:
-        'A balloon contains 2.7 L of gas at 275 K. What will be its volume at 330 K?',
-    v1: 2.7,
-    t1: 275,
-    t2: 330,
-  ),
-  PracticeProblem.charles(
-    question: 'A gas occupies 5.0 L at 290 K. Find the volume at 365 K.',
-    v1: 5,
-    t1: 290,
-    t2: 365,
+    choices: const [
+      AnswerChoice(label: 'A', text: '5.22 L'),
+      AnswerChoice(label: 'B', text: '5.32 L'),
+      AnswerChoice(label: 'C', text: '5.42 L'),
+      AnswerChoice(label: 'D', text: '5.52 L'),
+    ],
+    correctChoiceLabel: 'C',
   ),
 ];
 

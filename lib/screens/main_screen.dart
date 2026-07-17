@@ -70,13 +70,24 @@ class _MainScreenState extends State<MainScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: _onPageChanged,
-          children: _pages,
-        ),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/background.jpg',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const ColoredBox(color: Colors.white),
+          ),
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              children: _pages,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
