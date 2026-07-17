@@ -16,7 +16,7 @@ class IGasUApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'iGasU',
+      title: 'IGasU',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: showStartupFlow ? const StartupFlow() : const MainScreen(),

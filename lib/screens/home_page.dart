@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
@@ -10,174 +11,312 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/igasu_logo.png',
-                width: 28,
-                height: 28,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.science_outlined,
-                  size: 24,
-                  color: AppColors.boyleBlue,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'iGasU',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'What do you want to learn?',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Master Gas Laws',
-              style: GoogleFonts.inter(
-                fontSize: 26,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 28),
+            _buildTopHeader(),
+            const SizedBox(height: 14),
+            _buildHero(),
+            const SizedBox(height: 14),
             _buildMenuCard(
               context,
-              'Video Tutorials',
-              'Watch guided lessons on Boyle\'s\nand Charles\' laws',
-              Icons.play_circle_rounded,
-              AppColors.boyleBlue,
-              1,
+              title: 'Video Tutorials',
+              subtitle:
+                  'Watch clear and easy-to-understand tutorials about Boyle\'s Law and Charles\' Law.',
+              buttonLabel: 'Watch Videos',
+              buttonIcon: Icons.play_circle_outline_rounded,
+              artworkAsset: 'assets/images/video_tutorials.svg',
+              color: AppColors.boyleBlue,
+              pageIndex: 1,
+            ),
+            const SizedBox(height: 12),
+            _buildMenuCard(
+              context,
+              title: 'Problem Solver',
+              subtitle:
+                  'Practice solving problems step-by-step with corrections and instant feedback.',
+              buttonLabel: 'Solve Problems',
+              buttonIcon: Icons.assignment_rounded,
+              artworkAsset: 'assets/images/problem_solver.svg',
+              color: AppColors.charlesGreen,
+              pageIndex: 2,
+            ),
+            const SizedBox(height: 12),
+            _buildMenuCard(
+              context,
+              title: 'Dashboard',
+              subtitle:
+                  'Track your progress, view your performance, and stay on top of your learning.',
+              buttonLabel: 'View Dashboard',
+              buttonIcon: Icons.bar_chart_rounded,
+              artworkAsset: 'assets/images/dashboard.svg',
+              color: const Color(0xFF7E66D8),
+              pageIndex: 3,
             ),
             const SizedBox(height: 16),
-            _buildMenuCard(
-              context,
-              'Problem Solving',
-              'Practice real problems with\ninstant feedback',
-              Icons.quiz_rounded,
-              AppColors.charlesGreen,
-              2,
-            ),
-            const SizedBox(height: 16),
-            _buildMenuCard(
-              context,
-              'Learning Dashboard',
-              'Track your progress and\nreview your scores',
-              Icons.dashboard_rounded,
-              AppColors.errorRed,
-              3,
-            ),
+            _buildQuote(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    int pageIndex,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _navigateWithAnimation(context, pageIndex),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
+  Widget _buildTopHeader() {
+    return Row(
+      children: [
+        Image.asset(
+          'assets/images/igasu_logo.png',
+          width: 50,
+          height: 50,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.science_outlined,
+            size: 42,
+            color: AppColors.boyleBlue,
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: AppColors.surface,
-            border: Border.all(color: AppColors.border),
+            color: Colors.white.withValues(alpha: 0.86),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.08),
-                blurRadius: 12,
+                color: Colors.black.withValues(alpha: 0.07),
+                blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 26),
+              const Icon(
+                Icons.person_rounded,
+                color: AppColors.darkNavy,
+                size: 20,
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 7),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Welcome!',
+                    style: GoogleFonts.inter(
+                      color: AppColors.textSecondary,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
+                  Text(
+                    'Student',
+                    style: GoogleFonts.inter(
+                      color: AppColors.darkNavy,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+      ],
+    );
+  }
+
+  Widget _buildHero() {
+    return Column(
+      children: [
+        Text(
+          'Welcome to',
+          style: GoogleFonts.inter(
+            color: AppColors.darkNavy,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 2),
+        const _IGasUWordmark(),
+        const SizedBox(height: 4),
+        Text(
+          'Learn. Solve. Understand Gas Laws.',
+          style: GoogleFonts.inter(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.boyleBlue,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'Grade 10 - Boyle\'s Law & Charles\' Law',
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String buttonLabel,
+    required IconData buttonIcon,
+    required String artworkAsset,
+    required Color color,
+    required int pageIndex,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateWithAnimation(context, pageIndex),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              SvgPicture.asset(
+                artworkAsset,
+                width: 88,
+                height: 88,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.darkNavy,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 10,
+                        height: 1.35,
                         color: AppColors.textSecondary,
-                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(buttonIcon, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            buttonLabel,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-              ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: color,
-                  size: 14,
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildQuote() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          '"',
+          style: GoogleFonts.inter(
+            color: AppColors.boyleBlue,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        Flexible(
+          child: Text(
+            'Understand the laws. Master the problems. Become a scientist.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: AppColors.darkNavy,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Text(
+          '"',
+          style: GoogleFonts.inter(
+            color: AppColors.boyleBlue,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 
@@ -187,6 +326,36 @@ class HomePage extends StatelessWidget {
       pageIndex,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
+    );
+  }
+}
+
+class _IGasUWordmark extends StatelessWidget {
+  const _IGasUWordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    final baseStyle = GoogleFonts.inter(
+      fontSize: 48,
+      fontWeight: FontWeight.w900,
+      fontStyle: FontStyle.italic,
+      height: 0.95,
+    );
+
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: 'iGas',
+            style: baseStyle.copyWith(color: AppColors.darkNavy),
+          ),
+          TextSpan(
+            text: 'U',
+            style: baseStyle.copyWith(color: AppColors.boyleBlue),
+          ),
+        ],
+      ),
     );
   }
 }

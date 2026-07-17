@@ -9,10 +9,10 @@ void main() {
   testWidgets('shows the iGasU home screen', (WidgetTester tester) async {
     await tester.pumpWidget(const IGasUApp(showStartupFlow: false));
 
-    expect(find.text('iGasU'), findsOneWidget);
+    expect(find.text('Welcome to'), findsOneWidget);
     expect(find.text('Video Tutorials'), findsOneWidget);
-    expect(find.text('Problem Solving'), findsOneWidget);
-    expect(find.text('Learning Dashboard'), findsOneWidget);
+    expect(find.text('Problem Solver'), findsOneWidget);
+    expect(find.text('Dashboard'), findsWidgets);
   });
 
   testWidgets('problem solver renders ABCD choices', (tester) async {

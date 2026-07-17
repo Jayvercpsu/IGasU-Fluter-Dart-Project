@@ -12,7 +12,12 @@ class VideoTutorialsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text('Video Tutorials'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded),
@@ -34,7 +39,7 @@ class VideoTutorialsPage extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: AppColors.darkNavy,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -62,7 +67,7 @@ class VideoTutorialsPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       child: Material(
-        color: AppColors.surface,
+        color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () {
@@ -120,14 +125,8 @@ class VideoTutorialsPage extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          _buildChip(
-                            label: 'Tutorial',
-                            color: video.color,
-                          ),
-                          _buildChip(
-                            label: video.duration,
-                            color: video.color,
-                          ),
+                          _buildChip(label: 'Tutorial', color: video.color),
+                          _buildChip(label: video.duration, color: video.color),
                           if (lesson != null)
                             _buildChip(
                               label: lesson.type.formula,
@@ -220,8 +219,10 @@ class VideoTutorialsPage extends StatelessWidget {
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded,
-                            color: Colors.white),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -437,9 +438,7 @@ class VideoTutorialsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: lesson.type.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: lesson.type.color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: lesson.type.color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -628,9 +627,9 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
         .initialize()
         .then((_) => _controller.setLooping(false))
         .catchError((_) {
-      if (!mounted) return;
-      setState(() => _hasInitError = true);
-    });
+          if (!mounted) return;
+          setState(() => _hasInitError = true);
+        });
   }
 
   @override
@@ -661,8 +660,9 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
           child: Column(
             children: [
               AspectRatio(
-                aspectRatio:
-                    value.aspectRatio == 0 ? 16 / 9 : value.aspectRatio,
+                aspectRatio: value.aspectRatio == 0
+                    ? 16 / 9
+                    : value.aspectRatio,
                 child: VideoPlayer(_controller),
               ),
               _buildControlBar(
@@ -686,7 +686,10 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
     final currentPosition = _isScrubbing ? _scrubPosition : value.position;
     final totalMillis = totalDuration.inMilliseconds;
     final sliderMax = totalMillis <= 0 ? 1.0 : totalMillis.toDouble();
-    final sliderValue = currentPosition.inMilliseconds.clamp(0, sliderMax.toInt());
+    final sliderValue = currentPosition.inMilliseconds.clamp(
+      0,
+      sliderMax.toInt(),
+    );
 
     return Container(
       color: AppColors.textPrimary,
@@ -697,7 +700,9 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
           Row(
             children: [
               _controlButton(
-                icon: value.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                icon: value.isPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
                 onPressed: _togglePlayPause,
               ),
               _controlButton(
@@ -724,10 +729,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
             children: [
               Text(
                 _formatDuration(currentPosition),
-                style: GoogleFonts.inter(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
               ),
               Expanded(
                 child: SliderTheme(
@@ -769,10 +771,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
               ),
               Text(
                 _formatDuration(totalDuration),
-                style: GoogleFonts.inter(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
               ),
             ],
           ),
@@ -817,8 +816,8 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
     final clamped = target < Duration.zero
         ? Duration.zero
         : (totalDuration > Duration.zero && target > totalDuration
-            ? totalDuration
-            : target);
+              ? totalDuration
+              : target);
     final wasPlaying = value.isPlaying;
     await _controller.pause();
     await _controller.seekTo(clamped);
@@ -891,9 +890,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       decoration: BoxDecoration(
         color: widget.accentColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: widget.accentColor.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: widget.accentColor.withValues(alpha: 0.2)),
       ),
       child: Text(
         message,
