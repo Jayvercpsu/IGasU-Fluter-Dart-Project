@@ -78,6 +78,7 @@ class VideoTutorialReference {
     required this.color,
     this.type,
     this.subtitle,
+    this.videoUrl,
   });
 
   final String title;
@@ -86,6 +87,7 @@ class VideoTutorialReference {
   final Color color;
   final GasLawType? type;
   final String? subtitle;
+  final String? videoUrl;
 }
 
 class GivenField {
@@ -313,6 +315,7 @@ const List<VideoTutorialReference> videoTutorialReferences = [
     title: 'Boyle\'s Law',
     duration: '2:52',
     videoAssetPath: "assets/videos/BOYLE'S-LAW_Animation.mp4",
+    videoUrl: 'https://youtube.com/watch?v=YQmv272-4yU',
     color: Color(0xFF4A90E2),
     type: GasLawType.boyle,
   ),
@@ -320,6 +323,7 @@ const List<VideoTutorialReference> videoTutorialReferences = [
     title: 'Charles\' Law',
     duration: '3:20',
     videoAssetPath: "assets/videos/CHARLES'-LAW_Animation.mp4",
+    videoUrl: 'https://youtube.com/watch?v=twCcSsHmMgI',
     color: Color(0xFF5CB85C),
     type: GasLawType.charles,
   ),
@@ -327,6 +331,7 @@ const List<VideoTutorialReference> videoTutorialReferences = [
     title: 'The Kinetic Molecular Theory',
     duration: '1:20',
     videoAssetPath: 'assets/videos/The-Kinetic-Molecular-Theory.mp4',
+    videoUrl: 'https://youtube.com/watch?v=1Jtw8g795Us',
     color: Color(0xFFFF8A3D),
     subtitle: 'Supporting theory for Boyle\'s and Charles\' laws',
   ),

@@ -38,6 +38,7 @@ dependencies:
   google_fonts: ^6.1.0
   video_player: ^2.10.0
   shared_preferences: ^2.5.3
+  youtube_player_flutter: ^9.1.3
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,9 @@ flutter:
     - assets/images/video_tutorials.svg
     - assets/images/problem_solver.svg
     - assets/images/dashboard.svg
+    - assets/images/play.svg
+    - assets/images/pause.svg
+    - assets/images/play_circle.svg
     - assets/videos/
 
   # To add assets to your application, add an assets section, like this:

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
 import 'main_screen.dart';
@@ -66,7 +65,7 @@ class SplashScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   'iGasU',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
@@ -75,7 +74,7 @@ class SplashScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Learn Gas Laws Step by Step',
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,

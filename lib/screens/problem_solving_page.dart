@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../data/gas_law_content.dart';
 import '../data/learning_stats.dart';
@@ -652,34 +656,60 @@ class _RewatchVideoSheet extends StatefulWidget {
 }
 
 class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
-  late final VideoPlayerController _controller;
+  static const Duration _skipDuration = Duration(seconds: 10);
+  VideoPlayerController? _localController;
+  YoutubePlayerController? _youtubeController;
+  Duration? _fallbackDuration;
   bool _hasError = false;
   bool _isCompleted = false;
   bool _isScrubbing = false;
   Duration _scrubPosition = Duration.zero;
+  bool _resumeAfterScrub = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(widget.video.videoAssetPath)
-      ..addListener(_handleVideoTick);
-    _controller
-        .initialize()
-        .then((_) {
-          if (!mounted) return;
-          setState(() {});
-        })
-        .catchError((_) {
-          if (!mounted) return;
-          setState(() => _hasError = true);
-        });
+    if (widget.video.videoUrl != null) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: YoutubePlayer.convertUrlToId(widget.video.videoUrl!)!,
+        flags: const YoutubePlayerFlags(autoPlay: false),
+      )..addListener(_onYouTubeStateChange);
+    } else {
+      _fallbackDuration = _parseDurationLabel(widget.video.duration);
+      _localController = VideoPlayerController.asset(widget.video.videoAssetPath)
+        ..addListener(_handleVideoTick);
+      _localController!
+          .initialize()
+          .then((_) {
+            if (!mounted) return;
+            setState(() {});
+          })
+          .catchError((_) {
+            if (!mounted) return;
+            setState(() => _hasError = true);
+          });
+    }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleVideoTick);
-    _controller.dispose();
+    if (_youtubeController != null) {
+      _youtubeController!.removeListener(_onYouTubeStateChange);
+    }
+    _localController?.removeListener(_handleVideoTick);
+    _localController?.dispose();
+    _youtubeController?.dispose();
     super.dispose();
+  }
+
+  void _onYouTubeStateChange() {
+    if (!mounted) return;
+    final value = _youtubeController!.value;
+    if (!_isCompleted && value.isReady && !value.isFullScreen) {
+      if (value.position >= value.metaData.duration - const Duration(milliseconds: 700)) {
+        setState(() => _isCompleted = true);
+      }
+    }
   }
 
   @override
@@ -755,11 +785,15 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   Widget _buildVideo() {
+    if (widget.video.videoUrl != null) {
+      return _buildYouTubePlayer();
+    }
+
     if (_hasError) {
       return _buildFallback('Unable to load local video file.');
     }
 
-    final value = _controller.value;
+    final value = _localController!.value;
     if (!value.isInitialized) {
       return _buildFallback('Loading video...');
     }
@@ -771,98 +805,270 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: value.aspectRatio == 0 ? 16 / 9 : value.aspectRatio,
-            child: VideoPlayer(_controller),
+        children: [_buildVideoSurface(value), _buildControls(value)],
+      ),
+    );
+  }
+
+  Widget _buildYouTubePlayer() {
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _youtubeController!,
+        progressIndicatorColor: widget.video.color,
+        bottomActions: [
+          CurrentPosition(),
+          ProgressBar(
+            isExpanded: true,
+            colors: ProgressBarColors(
+              playedColor: widget.video.color,
+              handleColor: widget.video.color,
+            ),
           ),
-          _buildControls(value),
+          RemainingDuration(),
+          FullScreenButton(),
         ],
+      ),
+      builder: (context, player) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: player,
+        );
+      },
+    );
+  }
+
+  Widget _buildVideoSurface(VideoPlayerValue value) {
+    final showCenterControl = !value.isPlaying || value.isBuffering;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _togglePlayPause,
+      child: AspectRatio(
+        aspectRatio: value.aspectRatio == 0 ? 16 / 9 : value.aspectRatio,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            VideoPlayer(_localController!),
+            AnimatedOpacity(
+              opacity: showCenterControl ? 1 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: Container(
+                color: Colors.black26,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: value.isBuffering
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          value.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 38,
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildControls(VideoPlayerValue value) {
-    final duration = value.duration;
+    final duration = _effectiveDuration(value);
+    final hasKnownDuration = duration.inMilliseconds > 0;
     final position = _isScrubbing ? _scrubPosition : value.position;
-    final max = duration.inMilliseconds <= 0
-        ? 1.0
-        : duration.inMilliseconds.toDouble();
-    final sliderValue = position.inMilliseconds.clamp(0, max.toInt());
+    final max = hasKnownDuration ? duration.inMilliseconds.toDouble() : 1.0;
+    final sliderValue = position.inMilliseconds.toDouble().clamp(0.0, max);
 
     return Container(
       color: AppColors.textPrimary,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: _togglePlayPause,
-                icon: Icon(
-                  value.isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  color: Colors.white,
-                ),
+          SizedBox(
+            height: 28,
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 4,
+                activeTrackColor: widget.video.color,
+                inactiveTrackColor: Colors.white24,
+                thumbColor: widget.video.color,
+                overlayColor: widget.video.color.withValues(alpha: 0.2),
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
               ),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 3,
-                    activeTrackColor: widget.video.color,
-                    inactiveTrackColor: Colors.white24,
-                    thumbColor: widget.video.color,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 6,
-                    ),
-                  ),
-                  child: Slider(
-                    value: sliderValue.toDouble(),
-                    min: 0,
-                    max: max,
-                    onChangeStart: (rawValue) {
-                      setState(() {
-                        _isScrubbing = true;
-                        _scrubPosition = Duration(
-                          milliseconds: rawValue.round(),
-                        );
-                      });
-                    },
-                    onChanged: (rawValue) {
-                      setState(() {
-                        _scrubPosition = Duration(
-                          milliseconds: rawValue.round(),
-                        );
-                      });
-                    },
-                    onChangeEnd: (rawValue) async {
-                      setState(() => _isScrubbing = false);
-                      await _controller.seekTo(
-                        Duration(milliseconds: rawValue.round()),
-                      );
-                    },
-                  ),
-                ),
+              child: Slider(
+                value: sliderValue,
+                min: 0,
+                max: max,
+                onChangeStart: hasKnownDuration ? _startScrub : null,
+                onChanged: hasKnownDuration ? _updateScrub : null,
+                onChangeEnd: hasKnownDuration
+                    ? (rawValue) => unawaited(_endScrub(rawValue))
+                    : null,
               ),
-            ],
+            ),
           ),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              _controlButton(
+                onPressed: _togglePlayPause,
+                icon: SvgPicture.asset(
+                  value.isPlaying
+                      ? 'assets/images/pause.svg'
+                      : 'assets/images/play.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              _controlButton(
+                onPressed: () => _seekBy(-_skipDuration),
+                icon: const Icon(
+                  Icons.replay_10_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              _controlButton(
+                onPressed: () => _seekBy(_skipDuration),
+                icon: const Icon(
+                  Icons.forward_10_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 4),
               Text(
-                _formatDuration(position),
+                '${_formatDuration(position)} / '
+                "${hasKnownDuration ? _formatDuration(duration) : '--:--'}",
                 style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
               ),
-              Text(
-                _formatDuration(duration),
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
-              ),
+              const Spacer(),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _controlButton({
+    required Widget icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: icon,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      padding: const EdgeInsets.all(4),
+      splashRadius: 18,
+    );
+  }
+
+  void _startScrub(double rawValue) {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    _resumeAfterScrub = value.isPlaying;
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    setState(() {
+      _isScrubbing = true;
+      _scrubPosition = target;
+    });
+    if (value.isPlaying) {
+      unawaited(_localController!.pause());
+    }
+    unawaited(_localController!.seekTo(target));
+  }
+
+  void _updateScrub(double rawValue) {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    setState(() => _scrubPosition = target);
+    unawaited(_localController!.seekTo(target));
+  }
+
+  Future<void> _endScrub(double rawValue) async {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    await _localController!.seekTo(target);
+    if (!mounted) return;
+
+    setState(() {
+      _isScrubbing = false;
+      _scrubPosition = target;
+    });
+    if (_resumeAfterScrub) {
+      await _localController!.play();
+    }
+    _resumeAfterScrub = false;
+  }
+
+  Future<void> _seekBy(Duration offset) async {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+    await _seekTo(value.position + offset);
+  }
+
+  Future<void> _seekTo(Duration target) async {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+    final clamped = _clampToDuration(target, value);
+    final wasPlaying = value.isPlaying;
+    await _localController!.pause();
+    await _localController!.seekTo(clamped);
+    if (wasPlaying) await _localController!.play();
+  }
+
+  Duration _effectiveDuration(VideoPlayerValue value) {
+    if (value.duration > Duration.zero) {
+      return value.duration;
+    }
+    if (_fallbackDuration != null) {
+      return _fallbackDuration!;
+    }
+    return Duration.zero;
+  }
+
+  Duration _clampToDuration(Duration target, VideoPlayerValue value) {
+    final duration = _effectiveDuration(value);
+    if (target < Duration.zero) return Duration.zero;
+    if (duration > Duration.zero && target > duration) return duration;
+    return target;
   }
 
   Widget _buildFallback(String message) {
@@ -886,25 +1092,75 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   void _handleVideoTick() {
-    final value = _controller.value;
-    if (!value.isInitialized || _isCompleted) return;
+    final value = _localController!.value;
+    if (!mounted || !value.isInitialized) return;
     final duration = value.duration;
-    if (duration == Duration.zero) return;
-    if (value.position >= duration - const Duration(milliseconds: 700)) {
+    final completed =
+        !_isCompleted &&
+        duration > Duration.zero &&
+        value.position >= duration - const Duration(milliseconds: 700);
+    if (completed) {
       setState(() => _isCompleted = true);
+      return;
     }
+    setState(() {});
   }
 
   void _togglePlayPause() {
-    final value = _controller.value;
+    final value = _localController!.value;
     if (value.isPlaying) {
-      _controller.pause();
+      _localController!.pause();
       return;
     }
-    if (_isCompleted && value.position >= value.duration) {
-      _controller.seekTo(Duration.zero);
+    final duration = _effectiveDuration(value);
+    if (_isCompleted &&
+        duration > Duration.zero &&
+        value.position >= duration) {
+      _localController!.seekTo(Duration.zero);
     }
-    _controller.play();
+    _localController!.play();
+  }
+
+  Duration? _parseDurationLabel(String? input) {
+    if (input == null) return null;
+    final trimmed = input.trim().toLowerCase();
+    if (trimmed.isEmpty) return null;
+
+    final colonParts = trimmed.split(':').map((p) => p.trim()).toList();
+    if (colonParts.length == 2 || colonParts.length == 3) {
+      final allNumeric = colonParts.every((p) => int.tryParse(p) != null);
+      if (allNumeric) {
+        if (colonParts.length == 2) {
+          return Duration(
+            minutes: int.parse(colonParts[0]),
+            seconds: int.parse(colonParts[1]),
+          );
+        }
+        return Duration(
+          hours: int.parse(colonParts[0]),
+          minutes: int.parse(colonParts[1]),
+          seconds: int.parse(colonParts[2]),
+        );
+      }
+    }
+
+    final minuteMatch = RegExp(
+      r'^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes)$',
+    ).firstMatch(trimmed);
+    if (minuteMatch != null) {
+      final minutes = double.parse(minuteMatch.group(1)!);
+      return Duration(milliseconds: (minutes * 60000).round());
+    }
+
+    final secondMatch = RegExp(
+      r'^(\d+(?:\.\d+)?)\s*(s|sec|secs|second|seconds)?$',
+    ).firstMatch(trimmed);
+    if (secondMatch != null) {
+      final seconds = double.parse(secondMatch.group(1)!);
+      return Duration(milliseconds: (seconds * 1000).round());
+    }
+
+    return null;
   }
 
   String _formatDuration(Duration value) {

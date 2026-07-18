@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../data/gas_law_content.dart';
 import '../theme/app_colors.dart';
@@ -93,10 +97,11 @@ class VideoTutorialsPage extends StatelessWidget {
                     color: video.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(
-                    Icons.play_circle_rounded,
-                    color: video.color,
-                    size: 30,
+                  child: SvgPicture.asset(
+                    'assets/images/play_circle.svg',
+                    width: 30,
+                    height: 30,
+                    colorFilter: ColorFilter.mode(video.color, BlendMode.srcIn),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -260,6 +265,7 @@ class VideoTutorialsPage extends StatelessWidget {
                       videoAssetPath: video.videoAssetPath,
                       accentColor: lesson.type.color,
                       fallbackDurationLabel: video.duration,
+                      videoUrl: video.videoUrl,
                     ),
                     const SizedBox(height: 24),
                     _buildFormulaCard(lesson),
@@ -415,6 +421,7 @@ class VideoTutorialsPage extends StatelessWidget {
                 videoAssetPath: video.videoAssetPath,
                 accentColor: video.color,
                 fallbackDurationLabel: video.duration,
+                videoUrl: video.videoUrl,
               ),
               const Spacer(),
               SizedBox(
@@ -600,11 +607,13 @@ class _AssetVideoPlayer extends StatefulWidget {
     required this.videoAssetPath,
     required this.accentColor,
     this.fallbackDurationLabel,
+    this.videoUrl,
   });
 
   final String videoAssetPath;
   final Color accentColor;
   final String? fallbackDurationLabel;
+  final String? videoUrl;
 
   @override
   State<_AssetVideoPlayer> createState() => _AssetVideoPlayerState();
@@ -612,40 +621,56 @@ class _AssetVideoPlayer extends StatefulWidget {
 
 class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   static const Duration _skipDuration = Duration(seconds: 10);
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _localController;
+  YoutubePlayerController? _youtubeController;
   Duration? _fallbackDuration;
   bool _isScrubbing = false;
   Duration _scrubPosition = Duration.zero;
+  bool _resumeAfterScrub = false;
   bool _hasInitError = false;
 
   @override
   void initState() {
     super.initState();
-    _fallbackDuration = _parseDurationLabel(widget.fallbackDurationLabel);
-    _controller = VideoPlayerController.asset(widget.videoAssetPath);
-    _controller
-        .initialize()
-        .then((_) => _controller.setLooping(false))
-        .catchError((_) {
-          if (!mounted) return;
-          setState(() => _hasInitError = true);
-        });
+    if (widget.videoUrl != null) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: YoutubePlayer.convertUrlToId(widget.videoUrl!)!,
+        flags: const YoutubePlayerFlags(autoPlay: false),
+      );
+    } else {
+      _fallbackDuration = _parseDurationLabel(widget.fallbackDurationLabel);
+      _localController = VideoPlayerController.asset(widget.videoAssetPath);
+      _localController!
+          .initialize()
+          .then((_) {
+            _localController!.setLooping(false);
+          })
+          .catchError((_) {
+            if (!mounted) return;
+            setState(() => _hasInitError = true);
+          });
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _localController?.dispose();
+    _youtubeController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.videoUrl != null) {
+      return _buildYouTubePlayer();
+    }
+
     if (_hasInitError) {
       return _buildFallback('Unable to load local video file.');
     }
 
     return ValueListenableBuilder<VideoPlayerValue>(
-      valueListenable: _controller,
+      valueListenable: _localController!,
       builder: (context, value, _) {
         if (!value.isInitialized) {
           return _buildFallback('Loading video...');
@@ -659,12 +684,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
-              AspectRatio(
-                aspectRatio: value.aspectRatio == 0
-                    ? 16 / 9
-                    : value.aspectRatio,
-                child: VideoPlayer(_controller),
-              ),
+              _buildVideoSurface(value),
               _buildControlBar(
                 context: context,
                 value: value,
@@ -677,102 +697,189 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
     );
   }
 
+  Widget _buildYouTubePlayer() {
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _youtubeController!,
+        progressIndicatorColor: widget.accentColor,
+        bottomActions: [
+          CurrentPosition(),
+          ProgressBar(
+            isExpanded: true,
+            colors: ProgressBarColors(
+              playedColor: widget.accentColor,
+              handleColor: widget.accentColor,
+            ),
+          ),
+          RemainingDuration(),
+          FullScreenButton(),
+        ],
+      ),
+      builder: (context, player) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: player,
+        );
+      },
+    );
+  }
+
+  Widget _buildVideoSurface(VideoPlayerValue value) {
+    final showCenterControl = !value.isPlaying || value.isBuffering;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _togglePlayPause,
+      child: AspectRatio(
+        aspectRatio: value.aspectRatio == 0 ? 16 / 9 : value.aspectRatio,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            VideoPlayer(_localController!),
+            AnimatedOpacity(
+              opacity: showCenterControl ? 1 : 0,
+              duration: const Duration(milliseconds: 180),
+              child: Container(
+                color: Colors.black26,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: value.isBuffering
+                      ? const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          value.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 38,
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildControlBar({
     required BuildContext context,
     required VideoPlayerValue value,
     required bool showFullscreenAction,
   }) {
     final totalDuration = _effectiveDuration(value);
+    final hasKnownDuration = totalDuration.inMilliseconds > 0;
     final currentPosition = _isScrubbing ? _scrubPosition : value.position;
-    final totalMillis = totalDuration.inMilliseconds;
-    final sliderMax = totalMillis <= 0 ? 1.0 : totalMillis.toDouble();
-    final sliderValue = currentPosition.inMilliseconds.clamp(
-      0,
-      sliderMax.toInt(),
+    final sliderMax = hasKnownDuration
+        ? totalDuration.inMilliseconds.toDouble()
+        : 1.0;
+    final sliderValue = currentPosition.inMilliseconds.toDouble().clamp(
+      0.0,
+      sliderMax,
     );
 
     return Container(
       color: AppColors.textPrimary,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(
+            height: 28,
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                activeTrackColor: widget.accentColor,
+                inactiveTrackColor: Colors.white24,
+                thumbColor: widget.accentColor,
+                overlayColor: widget.accentColor.withValues(alpha: 0.2),
+              ),
+              child: Slider(
+                value: sliderValue,
+                min: 0,
+                max: sliderMax,
+                onChangeStart: hasKnownDuration ? _startScrub : null,
+                onChanged: hasKnownDuration ? _updateScrub : null,
+                onChangeEnd: hasKnownDuration
+                    ? (rawValue) => unawaited(_endScrub(rawValue))
+                    : null,
+              ),
+            ),
+          ),
           Row(
             children: [
               _controlButton(
-                icon: value.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
+                icon: SvgPicture.asset(
+                  value.isPlaying
+                      ? 'assets/images/pause.svg'
+                      : 'assets/images/play.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
                 onPressed: _togglePlayPause,
               ),
               _controlButton(
-                icon: Icons.replay_10_rounded,
+                icon: const Icon(
+                  Icons.replay_10_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
                 onPressed: () => _seekBy(-_skipDuration),
               ),
               _controlButton(
-                icon: Icons.forward_10_rounded,
+                icon: const Icon(
+                  Icons.forward_10_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
                 onPressed: () => _seekBy(_skipDuration),
               ),
+              const SizedBox(width: 4),
+              Text(
+                '${_formatDuration(currentPosition)} / '
+                "${hasKnownDuration ? _formatDuration(totalDuration) : '--:--'}",
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
+              ),
+              const Spacer(),
               if (showFullscreenAction)
                 _controlButton(
-                  icon: Icons.fullscreen_rounded,
+                  icon: const Icon(
+                    Icons.fullscreen_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                   onPressed: () => _openFullscreenPlayer(context),
                 )
               else
                 _controlButton(
-                  icon: Icons.fullscreen_exit_rounded,
+                  icon: const Icon(
+                    Icons.fullscreen_exit_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-            ],
-          ),
-          Row(
-            children: [
-              Text(
-                _formatDuration(currentPosition),
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
-              ),
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 6,
-                    ),
-                    activeTrackColor: widget.accentColor,
-                    inactiveTrackColor: Colors.white24,
-                    thumbColor: widget.accentColor,
-                  ),
-                  child: Slider(
-                    value: sliderValue.toDouble(),
-                    min: 0,
-                    max: sliderMax,
-                    onChangeStart: (rawValue) {
-                      setState(() {
-                        _isScrubbing = true;
-                        _scrubPosition = Duration(
-                          milliseconds: rawValue.round(),
-                        );
-                      });
-                    },
-                    onChanged: (rawValue) {
-                      setState(() {
-                        _scrubPosition = Duration(
-                          milliseconds: rawValue.round(),
-                        );
-                      });
-                    },
-                    onChangeEnd: (rawValue) async {
-                      final target = Duration(milliseconds: rawValue.round());
-                      setState(() => _isScrubbing = false);
-                      await _seekTo(target);
-                    },
-                  ),
-                ),
-              ),
-              Text(
-                _formatDuration(totalDuration),
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 11),
-              ),
             ],
           ),
           if (value.isBuffering)
@@ -789,13 +896,74 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
     );
   }
 
+  void _startScrub(double rawValue) {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    _resumeAfterScrub = value.isPlaying;
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    setState(() {
+      _isScrubbing = true;
+      _scrubPosition = target;
+    });
+    if (value.isPlaying) {
+      unawaited(_localController!.pause());
+    }
+    unawaited(_localController!.seekTo(target));
+  }
+
+  void _updateScrub(double rawValue) {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    setState(() => _scrubPosition = target);
+    unawaited(_localController!.seekTo(target));
+  }
+
+  Future<void> _endScrub(double rawValue) async {
+    final value = _localController!.value;
+    if (!value.isInitialized) return;
+
+    final target = _clampToDuration(
+      Duration(milliseconds: rawValue.round()),
+      value,
+    );
+    await _localController!.seekTo(target);
+    if (!mounted) return;
+
+    setState(() {
+      _isScrubbing = false;
+      _scrubPosition = target;
+    });
+    if (_resumeAfterScrub) {
+      await _localController!.play();
+    }
+    _resumeAfterScrub = false;
+  }
+
+  Duration _clampToDuration(Duration target, VideoPlayerValue value) {
+    final totalDuration = _effectiveDuration(value);
+    if (target < Duration.zero) return Duration.zero;
+    if (totalDuration > Duration.zero && target > totalDuration) {
+      return totalDuration;
+    }
+    return target;
+  }
+
   Widget _controlButton({
-    required IconData icon,
+    required Widget icon,
     required VoidCallback onPressed,
   }) {
     return IconButton(
       onPressed: onPressed,
-      icon: Icon(icon, color: Colors.white, size: 22),
+      icon: icon,
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       padding: const EdgeInsets.all(4),
       splashRadius: 18,
@@ -803,83 +971,74 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   }
 
   Future<void> _seekBy(Duration offset) async {
-    final value = _controller.value;
+    final value = _localController!.value;
     if (!value.isInitialized) return;
     final target = value.position + offset;
     await _seekTo(target);
   }
 
   Future<void> _seekTo(Duration target) async {
-    final value = _controller.value;
+    final value = _localController!.value;
     if (!value.isInitialized) return;
-    final totalDuration = _effectiveDuration(value);
-    final clamped = target < Duration.zero
-        ? Duration.zero
-        : (totalDuration > Duration.zero && target > totalDuration
-              ? totalDuration
-              : target);
+    final clamped = _clampToDuration(target, value);
     final wasPlaying = value.isPlaying;
-    await _controller.pause();
-    await _controller.seekTo(clamped);
-    if (wasPlaying) await _controller.play();
+    await _localController!.pause();
+    await _localController!.seekTo(clamped);
+    if (wasPlaying) await _localController!.play();
   }
 
   void _togglePlayPause() {
-    final value = _controller.value;
+    final value = _localController!.value;
     if (value.isPlaying) {
-      _controller.pause();
+      _localController!.pause();
       return;
     }
     final duration = _effectiveDuration(value);
     if (duration > Duration.zero && value.position >= duration) {
-      _controller.seekTo(Duration.zero);
+      _localController!.seekTo(Duration.zero);
     }
-    _controller.play();
+    _localController!.play();
   }
 
   Future<void> _openFullscreenPlayer(BuildContext context) {
-    return Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (context) => Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: ValueListenableBuilder<VideoPlayerValue>(
-              valueListenable: _controller,
-              builder: (context, value, _) {
-                if (!value.isInitialized) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  );
-                }
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: InteractiveViewer(
-                          minScale: 1,
-                          maxScale: 4,
-                          child: AspectRatio(
-                            aspectRatio: value.aspectRatio == 0
-                                ? 16 / 9
-                                : value.aspectRatio,
-                            child: VideoPlayer(_controller),
+    return Navigator.of(context, rootNavigator: true)
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder: (context) => Scaffold(
+              backgroundColor: Colors.black,
+              body: SafeArea(
+                child: ValueListenableBuilder<VideoPlayerValue>(
+                  valueListenable: _localController!,
+                  builder: (context, value, _) {
+                    if (!value.isInitialized) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    }
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: Center(
+                            child: InteractiveViewer(
+                              minScale: 1,
+                              maxScale: 4,
+                              child: _buildVideoSurface(value),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    _buildControlBar(
-                      context: context,
-                      value: value,
-                      showFullscreenAction: false,
-                    ),
-                  ],
-                );
-              },
+                        _buildControlBar(
+                          context: context,
+                          value: value,
+                          showFullscreenAction: false,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildFallback(String message) {
@@ -904,29 +1063,52 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   }
 
   Duration _effectiveDuration(VideoPlayerValue value) {
-    if (value.duration > Duration.zero) return value.duration;
-    if (_fallbackDuration != null) return _fallbackDuration!;
-    return Duration.zero;
+    if (value.duration > Duration.zero) {
+      return value.duration;
+    }
+    _fallbackDuration ??= _parseDurationLabel(widget.fallbackDurationLabel);
+    return _fallbackDuration ?? Duration.zero;
   }
 
   Duration? _parseDurationLabel(String? input) {
     if (input == null) return null;
-    final trimmed = input.trim();
+    final trimmed = input.trim().toLowerCase();
     if (trimmed.isEmpty) return null;
-    final parts = trimmed.split(':');
-    if (parts.length == 2) {
-      final minutes = int.tryParse(parts[0]);
-      final seconds = int.tryParse(parts[1]);
-      if (minutes == null || seconds == null) return null;
-      return Duration(minutes: minutes, seconds: seconds);
+
+    final colonParts = trimmed.split(':').map((p) => p.trim()).toList();
+    if (colonParts.length == 2 || colonParts.length == 3) {
+      final allNumeric = colonParts.every((p) => int.tryParse(p) != null);
+      if (allNumeric) {
+        if (colonParts.length == 2) {
+          return Duration(
+            minutes: int.parse(colonParts[0]),
+            seconds: int.parse(colonParts[1]),
+          );
+        }
+        return Duration(
+          hours: int.parse(colonParts[0]),
+          minutes: int.parse(colonParts[1]),
+          seconds: int.parse(colonParts[2]),
+        );
+      }
     }
-    if (parts.length == 3) {
-      final hours = int.tryParse(parts[0]);
-      final minutes = int.tryParse(parts[1]);
-      final seconds = int.tryParse(parts[2]);
-      if (hours == null || minutes == null || seconds == null) return null;
-      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+
+    final minuteMatch = RegExp(
+      r'^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes)$',
+    ).firstMatch(trimmed);
+    if (minuteMatch != null) {
+      final minutes = double.parse(minuteMatch.group(1)!);
+      return Duration(milliseconds: (minutes * 60000).round());
     }
+
+    final secondMatch = RegExp(
+      r'^(\d+(?:\.\d+)?)\s*(s|sec|secs|second|seconds)?$',
+    ).firstMatch(trimmed);
+    if (secondMatch != null) {
+      final seconds = double.parse(secondMatch.group(1)!);
+      return Duration(milliseconds: (seconds * 1000).round());
+    }
+
     return null;
   }
 
