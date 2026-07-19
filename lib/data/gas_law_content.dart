@@ -47,11 +47,7 @@ class TutorialLesson {
     required this.description,
     required this.welcomeLine,
     required this.lessonSummary,
-    required this.keyPoints,
-    required this.whyItHappens,
-    required this.reminders,
     required this.exampleQuestion,
-    required this.exampleInputs,
     required this.exampleSteps,
     required this.finalAnswer,
   });
@@ -61,11 +57,7 @@ class TutorialLesson {
   final String description;
   final String welcomeLine;
   final String lessonSummary;
-  final List<String> keyPoints;
-  final List<String> whyItHappens;
-  final List<String> reminders;
   final String exampleQuestion;
-  final List<String> exampleInputs;
   final List<String> exampleSteps;
   final String finalAnswer;
 }
@@ -150,15 +142,15 @@ class PracticeProblem {
     switch (type) {
       case GasLawType.boyle:
         return [
-          GivenField(label: 'P1', value: _formatNumber(p1!), unit: 'atm'),
-          GivenField(label: 'V1', value: _formatNumber(v1), unit: 'L'),
-          GivenField(label: 'P2', value: _formatNumber(p2!), unit: 'atm'),
+          GivenField(label: 'P₁', value: _formatNumber(p1!), unit: 'atm'),
+          GivenField(label: 'V₁', value: _formatNumber(v1), unit: 'L'),
+          GivenField(label: 'P₂', value: _formatNumber(p2!), unit: 'atm'),
         ];
       case GasLawType.charles:
         return [
-          GivenField(label: 'V1', value: _formatNumber(v1), unit: 'L'),
-          GivenField(label: 'T1', value: _formatNumber(t1!), unit: 'K'),
-          GivenField(label: 'T2', value: _formatNumber(t2!), unit: 'K'),
+          GivenField(label: 'V₁', value: _formatNumber(v1), unit: 'L'),
+          GivenField(label: 'T₁', value: _formatNumber(t1!), unit: 'K'),
+          GivenField(label: 'T₂', value: _formatNumber(t2!), unit: 'K'),
         ];
     }
   }
@@ -167,7 +159,7 @@ class PracticeProblem {
     final lines = givenFields
         .map((field) => '${field.label} = ${field.value} ${field.unit}')
         .toList();
-    lines.add('V2 = ?');
+    lines.add('V₂ = ?');
     return lines;
   }
 
@@ -190,19 +182,19 @@ class PracticeProblem {
         final numerator = p1! * v1;
         return [
           'Using Boyle\'s Law:',
-          'P1V1 = P2V2',
+          'P₁V₁ = P₂V₂',
           '',
           'Given:',
-          'P1 = ${_formatNumber(p1!)} atm',
-          'V1 = ${_formatNumber(v1)} L',
-          'P2 = ${_formatNumber(p2!)} atm',
-          'V2 = ?',
+          'P₁ = ${_formatNumber(p1!)} atm',
+          'V₁ = ${_formatNumber(v1)} L',
+          'P₂ = ${_formatNumber(p2!)} atm',
+          'V₂ = ?',
           '',
-          'Solve for V2:',
-          'V2 = (P1 x V1) / P2',
-          'V2 = (${_formatNumber(p1!)} x ${_formatNumber(v1)}) / ${_formatNumber(p2!)}',
-          'V2 = ${_formatNumber(numerator)} / ${_formatNumber(p2!)}',
-          'V2 = ${_formatNumber(answer)} L',
+          'Solve for V₂:',
+          'V₂ = (P₁ × V₁) / P₂',
+          'V₂ = (${_formatNumber(p1!)} × ${_formatNumber(v1)}) / ${_formatNumber(p2!)}',
+          'V₂ = ${_formatNumber(numerator)} / ${_formatNumber(p2!)}',
+          'V₂ = ${_formatNumber(answer)} L',
           '',
           'Final answer: ${_formatNumber(answer)} L',
         ].join('\n');
@@ -210,22 +202,74 @@ class PracticeProblem {
         final numerator = v1 * t2!;
         return [
           'Using Charles\' Law:',
-          'V1/T1 = V2/T2',
+          'V₁/T₁ = V₂/T₂',
           '',
           'Given:',
-          'V1 = ${_formatNumber(v1)} L',
-          'T1 = ${_formatNumber(t1!)} K',
-          'T2 = ${_formatNumber(t2!)} K',
-          'V2 = ?',
+          'V₁ = ${_formatNumber(v1)} L',
+          'T₁ = ${_formatNumber(t1!)} K',
+          'T₂ = ${_formatNumber(t2!)} K',
+          'V₂ = ?',
           '',
-          'Solve for V2:',
-          'V2 = (V1 x T2) / T1',
-          'V2 = (${_formatNumber(v1)} x ${_formatNumber(t2!)}) / ${_formatNumber(t1!)}',
-          'V2 = ${_formatNumber(numerator)} / ${_formatNumber(t1!)}',
-          'V2 = ${_formatNumber(answer)} L',
+          'Solve for V₂:',
+          'V₂ = (V₁ × T₂) / T₁',
+          'V₂ = (${_formatNumber(v1)} × ${_formatNumber(t2!)}) / ${_formatNumber(t1!)}',
+          'V₂ = ${_formatNumber(numerator)} / ${_formatNumber(t1!)}',
+          'V₂ = ${_formatNumber(answer)} L',
           '',
           'Final answer: ${_formatNumber(answer)} L',
         ].join('\n');
+    }
+  }
+
+  List<String> get solutionLines {
+    switch (type) {
+      case GasLawType.boyle:
+        final numerator = p1! * v1;
+        final p1Str = _formatNumber(p1!);
+        final v1Str = _formatNumber(v1);
+        final p2Str = _formatNumber(p2!);
+        final numStr = _formatNumber(numerator);
+        final ansStr = _formatNumber(answer);
+        return [
+          'Using Boyle\'s Law:',
+          'P₁V₁ = P₂V₂',
+          '',
+          'Given:',
+          'P₁ = $p1Str atm',
+          'V₁ = $v1Str L',
+          'P₂ = $p2Str atm',
+          'V₂ = ?',
+          '',
+          'Solve for V₂:',
+          'V₂ = @@ P₁V₁ | P₂',
+          'V₂ = @@ (${p1Str}atm)(${v1Str}L) | ${p2Str}atm',
+          'V₂ = @@ ${numStr}L | $p2Str',
+          'V₂ = ${ansStr}L',
+          '',
+          'Final answer: $ansStr L',
+        ];
+      case GasLawType.charles:
+        final num = v1 * t2!;
+        final v1Str = _formatNumber(v1);
+        final t1Str = _formatNumber(t1!);
+        final t2Str = _formatNumber(t2!);
+        final numStr = _formatNumber(num);
+        final ansStr = _formatNumber(answer);
+        return [
+          'Given:',
+          '• V₁ = $v1Str L',
+          '• T₁ = $t1Str K',
+          '• T₂ = $t2Str K',
+          '',
+          'Formula:',
+          'V₁/T₁ = V₂/T₂',
+          'V₂ = @@ (V₁T₂) | T₁',
+          '',
+          'Solution:',
+          'V₂ = @@ ($v1Str × $t2Str) | $t1Str',
+          'V₂ = @@ $numStr | $t1Str',
+          'V₂ = $ansStr L',
+        ];
     }
   }
 }
@@ -249,29 +293,24 @@ const List<TutorialLesson> tutorialLessons = [
         'A guided Boyle\'s Law lesson based on the current content script.',
     welcomeLine: 'Welcome to iGasU!',
     lessonSummary:
-        'In this lesson, we will explore Boyle\'s Law. Boyle\'s Law explains the relationship between pressure and volume when temperature remains constant. It states that pressure and volume are inversely proportional.',
-    keyPoints: [
-      'When volume decreases, pressure increases.',
-      'When volume increases, pressure decreases.',
-    ],
-    whyItHappens: [
-      'According to the Kinetic Molecular Theory, gas particles move randomly and continuously collide with the walls of the container.',
-      'If we reduce the volume, the particles have less space to move. Because of this, collisions happen more often. More collisions mean higher pressure.',
-    ],
-    reminders: [
-      'Keep temperature constant when using Boyle\'s Law.',
-      'Use the formula P1V1 = P2V2.',
-    ],
+        'In this lesson, we will explore Boyle\'s Law. Boyle\'s Law explains the relationship between pressure and volume when temperature remains constant. It states that pressure and volume are inversely proportional. \n\nThis means:\nWhen volume decreases, pressure increases. \nWhen volume increases, pressure decreases.\n\nWhy does this happen? \n-According to the Kinetic Molecular Theory, gas particles move randomly and continuously collide with the walls of the container. \nIf we reduce the volume, the particles have less space to move. Because of this, collisions happen more often. More collisions mean higher pressure. \n\nThe formula for Boyle\'s Law is: P₁V₁ = P₂V₂',
     exampleQuestion:
-        'A gas has a volume of 2.0 liters at 1 atmosphere. If the volume decreases to 1.0 liter, what happens to the pressure?',
-    exampleInputs: ['P1 = 1 atm', 'V1 = 2.0 L', 'V2 = 1.0 L', 'P2 = ?'],
+        'A gas has a volume of 2.0 liters at 1 atmosphere. If the volume decreases to 1.0 liter, what happens to the pressure?\n(Step-by-Step)',
     exampleSteps: [
-      'Open the Gas Law Solver in iGasU.',
-      'Enter the values, then tap Solve.',
-      'P1V1 = P2V2',
-      '(1 x 2.0) = (P2 x 1.0)',
-      '2 = P2',
-      'P2 = 2 atm',
+      'CHOOSE ANSWER FROM MULTIPLE CHOICE',
+      'ONCE THE ANSWER IS CORRECT',
+      'The app shows: Formula substitution Step-by-step solution.',
+      'Given',
+      'P₁ = 1 atm',
+      'V₁ = 2.0 L',
+      'V₂ = 1.0 L',
+      'P₂ ?',
+      'P₁V₁ = P₂V₂',
+      'P₂ = P₁V₁ | V₂',
+      'P₂ = (1atm)(2L) | 1L',
+      'P₂ = 2 | 1',
+      'P₂ = 2 atm',
+      'Final answer: The new pressure is 2.0 atm.',
     ],
     finalAnswer: 'The new pressure is 2.0 atm.',
   ),
@@ -282,29 +321,24 @@ const List<TutorialLesson> tutorialLessons = [
         'A guided Charles\' Law lesson based on the current content script.',
     welcomeLine: 'Welcome back to iGasU!',
     lessonSummary:
-        'In this lesson, we will study Charles\' Law. Charles\' Law explains how temperature affects volume when pressure remains constant. It states that volume and temperature are directly proportional.',
-    keyPoints: [
-      'When temperature increases, volume increases.',
-      'When temperature decreases, volume decreases.',
-    ],
-    whyItHappens: [
-      'Based on the Kinetic Molecular Theory, heating a gas makes its particles move faster.',
-      'Faster particles spread farther apart. This causes the gas to expand.',
-    ],
-    reminders: [
-      'Temperature must always be in Kelvin.',
-      'Use the formula V1/T1 = V2/T2.',
-    ],
+        'In this lesson, we will study Charles\' Law. Charles\' Law explains how temperature affects volume when pressure remains constant. It states that volume and temperature are directly proportional. \n\nThis means:\nWhen temperature increases, volume increases. \nWhen temperature decreases, volume decreases.\n\nWhy does this happen? \n-Based on the Kinetic Molecular Theory, heating a gas makes its particles move faster. \nFaster particles spread farther apart. This causes the gas to expand. \n\nThe formula for Charles\' Law is: V₁/T₁ = V₂/T₂',
     exampleQuestion:
-        'A gas has a volume of 2.0 liters at 300 Kelvin. If the temperature increases to 450 Kelvin, what will be the new volume?',
-    exampleInputs: ['V1 = 2.0 L', 'T1 = 300 K', 'T2 = 450 K', 'V2 = ?'],
+        'A gas has a volume of 2.0 liters at 300 Kelvin. If the temperature increases to 450 Kelvin, what will be the new volume?\n(Step-by-Step)',
     exampleSteps: [
-      'Open the Gas Law Solver in iGasU.',
-      'Enter the values, then tap Solve.',
-      'V1/T1 = V2/T2',
-      '2.0 / 300 = V2 / 450',
-      '2.0 x 450 = 300V2',
-      'V2 = 3.0 L',
+      'CHOOSE ANSWER FROM MULTIPLE CHOICE',
+      'ONCE THE ANSWER IS CORRECT',
+      'The app shows: Formula substitution Step-by-step solution.',
+      'Given',
+      'V₁ = 2.0 L',
+      'T₁ = 300 K',
+      'T₂ = 450 K',
+      'V₂ = ?',
+      'V₁/T₁ = V₂/T₂',
+      'V₂ = @@ (V₁ x T₂) | T₁',
+      'V₂ = @@ (2.0 x 450) | 300',
+      'V₂ = @@ 900 | 300',
+      'V₂ = 3.0 L',
+      'Final answer: The new volume is 3.0 liters.',
     ],
     finalAnswer: 'The new volume is 3.0 liters.',
   ),

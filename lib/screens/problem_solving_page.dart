@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../components/fraction_widget.dart';
 import '../data/gas_law_content.dart';
 import '../data/learning_stats.dart';
 import '../theme/app_colors.dart';
@@ -365,17 +366,7 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              _currentProblem.solutionText,
-              style: GoogleFonts.inter(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-                height: 1.55,
-              ),
-            ),
-          ),
+          _buildSolutionLines(),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -486,6 +477,61 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSolutionLines() {
+    final lines = _currentProblem.solutionLines;
+    final textStyle = GoogleFonts.inter(
+      color: AppColors.textPrimary,
+      fontSize: 13,
+      height: 1.55,
+    );
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: lines.map((line) {
+          if (line.contains(' | ')) {
+            final parts = line.split(' | ');
+            if (parts.length == 2) {
+              final numeratorLine = parts[0];
+              final denominator = parts[1].trim();
+              String leftPart;
+              String numerator;
+
+              if (numeratorLine.contains(' @@ ')) {
+                final np = numeratorLine.split(' @@ ');
+                leftPart = '${np[0].trim()} ';
+                numerator = np[1].trim();
+              } else {
+                final words = numeratorLine.split(' ');
+                if (words.length >= 2) {
+                  numerator = words.last;
+                  leftPart =
+                      '${words.sublist(0, words.length - 1).join(' ')} ';
+                } else {
+                  leftPart = '';
+                  numerator = numeratorLine;
+                }
+              }
+
+              return FractionWidget(
+                leftPart: leftPart,
+                numerator: numerator,
+                denominator: denominator,
+                color: AppColors.textPrimary,
+                textStyle: textStyle,
+              );
+            }
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(line, style: textStyle),
+          );
+        }).toList(),
       ),
     );
   }

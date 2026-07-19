@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+import '../components/fraction_widget.dart';
 import '../data/gas_law_content.dart';
 import '../theme/app_colors.dart';
 import 'main_screen.dart';
@@ -281,20 +282,6 @@ class VideoTutorialsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildSectionTitle('Key Points'),
-                    const SizedBox(height: 10),
-                    ...lesson.keyPoints.map(_buildBulletPoint),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Why It Happens'),
-                    const SizedBox(height: 10),
-                    ...lesson.whyItHappens.map(_buildBulletPoint),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Reminders'),
-                    const SizedBox(height: 10),
-                    ...lesson.reminders.map(_buildBulletPoint),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Worked Example'),
-                    const SizedBox(height: 10),
                     Text(
                       lesson.exampleQuestion,
                       style: GoogleFonts.inter(
@@ -305,12 +292,6 @@ class VideoTutorialsPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildStepCard(
-                      title: 'Enter in iGasU',
-                      color: lesson.type.color,
-                      lines: lesson.exampleInputs,
-                    ),
-                    const SizedBox(height: 12),
                     _buildStepCard(
                       title: 'Step-by-Step Solution',
                       color: lesson.type.color,
@@ -482,39 +463,6 @@ class VideoTutorialsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBulletPoint(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 7),
-            child: Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: AppColors.boyleBlue,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.6,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStepCard({
     required String title,
     required Color color,
@@ -553,22 +501,58 @@ class VideoTutorialsPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...lines.map(
-            (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                line,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.6,
-                ),
-              ),
-            ),
-          ),
+          ..._buildStepLines(lines, color),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildStepLines(List<String> lines, Color color) {
+    final textStyle = GoogleFonts.inter(
+      fontSize: 14,
+      color: AppColors.textSecondary,
+      height: 1.6,
+    );
+
+    return lines.map((line) {
+      if (line.contains(' | ')) {
+        final parts = line.split(' | ');
+        if (parts.length == 2) {
+          final numeratorLine = parts[0];
+          final denominator = parts[1].trim();
+          String leftPart;
+          String numerator;
+
+          if (numeratorLine.contains(' @@ ')) {
+            final np = numeratorLine.split(' @@ ');
+            leftPart = '${np[0].trim()} ';
+            numerator = np[1].trim();
+          } else {
+            final words = numeratorLine.split(' ');
+            if (words.length >= 2) {
+              numerator = words.last;
+              leftPart =
+                  '${words.sublist(0, words.length - 1).join(' ')} ';
+            } else {
+              leftPart = '';
+              numerator = numeratorLine;
+            }
+          }
+
+          return FractionWidget(
+            leftPart: leftPart,
+            numerator: numerator,
+            denominator: denominator,
+            color: color,
+            textStyle: textStyle,
+          );
+        }
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Text(line, style: textStyle),
+      );
+    }).toList();
   }
 
   TutorialLesson? _lessonFor(GasLawType? type) {
