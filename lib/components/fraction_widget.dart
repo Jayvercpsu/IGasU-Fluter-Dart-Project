@@ -28,7 +28,7 @@ class FractionWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (leftPart.isNotEmpty)
             Padding(
@@ -42,12 +42,11 @@ class FractionWidget extends StatelessWidget {
               children: [
                 Text(numerator, style: style, textAlign: TextAlign.center),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Container(
-                    height: 1.5,
+                    height: 2,
                     decoration: BoxDecoration(
-                      color: fracColor.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(1),
+                      color: fracColor.withValues(alpha: 0.9),
                     ),
                   ),
                 ),

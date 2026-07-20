@@ -17,7 +17,7 @@ extension GasLawTypePresentation on GasLawType {
       case GasLawType.boyle:
         return 'P1V1 = P2V2';
       case GasLawType.charles:
-        return 'V1/T1 = V2/T2';
+        return 'V₁/T₁ = V₂/T₂';
     }
   }
 
@@ -189,9 +189,9 @@ class PracticeProblem {
           'V₂ = ?',
           '',
           'Solve for V₂:',
-          'V₂ = (P₁ × V₁) / P₂',
-          'V₂ = (${_formatNumber(p1!)} × ${_formatNumber(v1)}) / ${_formatNumber(p2!)}',
-          'V₂ = ${_formatNumber(numerator)} / ${_formatNumber(p2!)}',
+          'V₂ = @@ P₁ × V₁ | P₂',
+          'V₂ = @@ ${_formatNumber(p1!)} × ${_formatNumber(v1)} | ${_formatNumber(p2!)}',
+          'V₂ = @@ ${_formatNumber(numerator)} | ${_formatNumber(p2!)}',
           'V₂ = ${_formatNumber(answer)} L',
           '',
           'Final answer: ${_formatNumber(answer)} L',
@@ -200,7 +200,7 @@ class PracticeProblem {
         final numerator = v1 * t2!;
         return [
           'Using Charles\' Law:',
-          'V₁/T₁ = V₂/T₂',
+          'V₁ @@ T₁ = V₂ @@ T₂',
           '',
           'Given:',
           'V₁ = ${_formatNumber(v1)} L',
@@ -209,9 +209,9 @@ class PracticeProblem {
           'V₂ = ?',
           '',
           'Solve for V₂:',
-          'V₂ = (V₁ × T₂) / T₁',
-          'V₂ = (${_formatNumber(v1)} × ${_formatNumber(t2!)}) / ${_formatNumber(t1!)}',
-          'V₂ = ${_formatNumber(numerator)} / ${_formatNumber(t1!)}',
+          'V₂ = @@ V₁ × T₂ | T₁',
+          'V₂ = @@ ${_formatNumber(v1)} × ${_formatNumber(t2!)} | ${_formatNumber(t1!)}',
+          'V₂ = @@ ${_formatNumber(numerator)} | ${_formatNumber(t1!)}',
           'V₂ = ${_formatNumber(answer)} L',
           '',
           'Final answer: ${_formatNumber(answer)} L',
@@ -260,7 +260,7 @@ class PracticeProblem {
           '• T₂ = $t2Str K',
           '',
           'Formula:',
-          'V₁/T₁ = V₂/T₂',
+          'V₁ @@ T₁ = V₂ @@ T₂',
           'V₂ = @@ (V₁T₂) | T₁',
           '',
           'Solution:',
@@ -331,7 +331,7 @@ const List<TutorialLesson> tutorialLessons = [
       'T₁ = 300 K',
       'T₂ = 450 K',
       'V₂ = ?',
-      'V₁/T₁ = V₂/T₂',
+      'V₁ @@ T₁ = V₂ @@ T₂',
       'V₂ = @@ (V₁ x T₂) | T₁',
       'V₂ = @@ (2.0 x 450) | 300',
       'V₂ = @@ 900 | 300',

@@ -493,6 +493,20 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: lines.map((line) {
+          if (line.contains(' @@ ') && line.contains('=')) {
+            final sides = line.split('=');
+            if (sides.length == 2) {
+              final leftParts = sides[0].trim().split(' @@ ');
+              final rightParts = sides[1].trim().split(' @@ ');
+              if (leftParts.length == 2 && rightParts.length == 2) {
+                return _buildTwoFractionLine(
+                  leftParts[0].trim(), leftParts[1].trim(),
+                  rightParts[0].trim(), rightParts[1].trim(),
+                  textStyle, AppColors.textPrimary,
+                );
+              }
+            }
+          }
           if (line.contains(' | ')) {
             final parts = line.split(' | ');
             if (parts.length == 2) {
@@ -531,6 +545,57 @@ class _ProblemSolvingPageState extends State<ProblemSolvingPage> {
             child: Text(line, style: textStyle),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTwoFractionLine(
+    String leftNum, String leftDen,
+    String rightNum, String rightDen,
+    TextStyle style, Color color,
+  ) {
+    Widget fractionWidget(String num, String den) {
+      return SizedBox(
+        width: 44,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(num, style: style, textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Container(
+                height: 2,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+            Text(den, style: style, textAlign: TextAlign.center),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          fractionWidget(leftNum, leftDen),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              '=',
+              style: GoogleFonts.inter(
+                fontSize: style.fontSize,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          fractionWidget(rightNum, rightDen),
+        ],
       ),
     );
   }

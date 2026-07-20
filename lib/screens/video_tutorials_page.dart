@@ -436,14 +436,7 @@ class VideoTutorialsPage extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          Text(
-            lesson.type.formula,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: lesson.type.color,
-            ),
-          ),
+          _buildFormulaDisplay(lesson.type.formula, lesson.type.color),
         ],
       ),
     );
@@ -512,6 +505,20 @@ class VideoTutorialsPage extends StatelessWidget {
     );
 
     return lines.map((line) {
+      if (line.contains(' @@ ') && line.contains('=')) {
+        final sides = line.split('=');
+        if (sides.length == 2) {
+          final leftParts = sides[0].trim().split(' @@ ');
+          final rightParts = sides[1].trim().split(' @@ ');
+          if (leftParts.length == 2 && rightParts.length == 2) {
+            return _buildTwoFractionLine(
+              leftParts[0].trim(), leftParts[1].trim(),
+              rightParts[0].trim(), rightParts[1].trim(),
+              textStyle, color,
+            );
+          }
+        }
+      }
       if (line.contains(' | ')) {
         final parts = line.split(' | ');
         if (parts.length == 2) {
@@ -550,6 +557,120 @@ class VideoTutorialsPage extends StatelessWidget {
         child: Text(line, style: textStyle),
       );
     }).toList();
+  }
+
+  Widget _buildTwoFractionLine(
+    String leftNum, String leftDen,
+    String rightNum, String rightDen,
+    TextStyle style, Color color,
+  ) {
+    Widget fractionWidget(String num, String den) {
+      return SizedBox(
+        width: 48,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(num, style: style, textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Container(
+                height: 2,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+            Text(den, style: style, textAlign: TextAlign.center),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          fractionWidget(leftNum, leftDen),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              '=',
+              style: GoogleFonts.inter(
+                fontSize: style.fontSize,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          fractionWidget(rightNum, rightDen),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormulaDisplay(String formula, Color color) {
+    final fracStyle = GoogleFonts.inter(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      fontStyle: FontStyle.italic,
+      color: color,
+    );
+
+    Widget fractionWidget(String num, String den) {
+      return SizedBox(
+        width: 60,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(num, style: fracStyle, textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                height: 2.5,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+            Text(den, style: fracStyle, textAlign: TextAlign.center),
+          ],
+        ),
+      );
+    }
+
+    if (!formula.contains('/')) {
+      return Text(formula, style: fracStyle);
+    }
+
+    final sides = formula.split('=');
+    if (sides.length == 2) {
+      final leftParts = sides[0].trim().split('/');
+      final rightParts = sides[1].trim().split('/');
+      if (leftParts.length == 2 && rightParts.length == 2) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            fractionWidget(leftParts[0].trim(), leftParts[1].trim()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                '=',
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ),
+            fractionWidget(rightParts[0].trim(), rightParts[1].trim()),
+          ],
+        );
+      }
+    }
+    return Text(formula, style: fracStyle);
   }
 
   TutorialLesson? _lessonFor(GasLawType? type) {
