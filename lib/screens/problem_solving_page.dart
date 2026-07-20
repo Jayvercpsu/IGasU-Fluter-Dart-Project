@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../components/fraction_widget.dart';
 import '../data/gas_law_content.dart';
@@ -703,9 +702,7 @@ class _RewatchVideoSheet extends StatefulWidget {
 
 class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   static const Duration _skipDuration = Duration(seconds: 10);
-  VideoPlayerController? _localController;
-  YoutubePlayerController? _youtubeController;
-  Duration? _fallbackDuration;
+  late final VideoPlayerController _localController;
   bool _hasError = false;
   bool _isCompleted = false;
   bool _isScrubbing = false;
@@ -715,47 +712,25 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.video.videoUrl != null) {
-      _youtubeController = YoutubePlayerController(
-        initialVideoId: YoutubePlayer.convertUrlToId(widget.video.videoUrl!)!,
-        flags: const YoutubePlayerFlags(autoPlay: false),
-      )..addListener(_onYouTubeStateChange);
-    } else {
-      _fallbackDuration = _parseDurationLabel(widget.video.duration);
-      _localController = VideoPlayerController.asset(widget.video.videoAssetPath)
-        ..addListener(_handleVideoTick);
-      _localController!
-          .initialize()
-          .then((_) {
-            if (!mounted) return;
-            setState(() {});
-          })
-          .catchError((_) {
-            if (!mounted) return;
-            setState(() => _hasError = true);
-          });
-    }
+    _localController = VideoPlayerController.asset(widget.video.videoAssetPath)
+      ..addListener(_handleVideoTick);
+    _localController
+        .initialize()
+        .then((_) {
+          if (!mounted) return;
+          setState(() {});
+        })
+        .catchError((Object err) {
+          if (!mounted) return;
+          setState(() => _hasError = true);
+        });
   }
 
   @override
   void dispose() {
-    if (_youtubeController != null) {
-      _youtubeController!.removeListener(_onYouTubeStateChange);
-    }
-    _localController?.removeListener(_handleVideoTick);
-    _localController?.dispose();
-    _youtubeController?.dispose();
+    _localController.removeListener(_handleVideoTick);
+    _localController.dispose();
     super.dispose();
-  }
-
-  void _onYouTubeStateChange() {
-    if (!mounted) return;
-    final value = _youtubeController!.value;
-    if (!_isCompleted && value.isReady && !value.isFullScreen) {
-      if (value.position >= value.metaData.duration - const Duration(milliseconds: 700)) {
-        setState(() => _isCompleted = true);
-      }
-    }
   }
 
   @override
@@ -831,15 +806,11 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   Widget _buildVideo() {
-    if (widget.video.videoUrl != null) {
-      return _buildYouTubePlayer();
-    }
-
     if (_hasError) {
       return _buildFallback('Unable to load local video file.');
     }
 
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) {
       return _buildFallback('Loading video...');
     }
@@ -856,37 +827,6 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
     );
   }
 
-  Widget _buildYouTubePlayer() {
-    return YoutubePlayerBuilder(
-      player: YoutubePlayer(
-        controller: _youtubeController!,
-        progressIndicatorColor: widget.video.color,
-        bottomActions: [
-          CurrentPosition(),
-          ProgressBar(
-            isExpanded: true,
-            colors: ProgressBarColors(
-              playedColor: widget.video.color,
-              handleColor: widget.video.color,
-            ),
-          ),
-          RemainingDuration(),
-          FullScreenButton(),
-        ],
-      ),
-      builder: (context, player) {
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: player,
-        );
-      },
-    );
-  }
-
   Widget _buildVideoSurface(VideoPlayerValue value) {
     final showCenterControl = !value.isPlaying || value.isBuffering;
 
@@ -898,7 +838,7 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            VideoPlayer(_localController!),
+            VideoPlayer(_localController),
             AnimatedOpacity(
               opacity: showCenterControl ? 1 : 0,
               duration: const Duration(milliseconds: 180),
@@ -942,7 +882,6 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
     final position = _isScrubbing ? _scrubPosition : value.position;
     final max = hasKnownDuration ? duration.inMilliseconds.toDouble() : 1.0;
     final sliderValue = position.inMilliseconds.toDouble().clamp(0.0, max);
-
     return Container(
       color: AppColors.textPrimary,
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
@@ -1033,7 +972,7 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   void _startScrub(double rawValue) {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     _resumeAfterScrub = value.isPlaying;
@@ -1046,13 +985,13 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
       _scrubPosition = target;
     });
     if (value.isPlaying) {
-      unawaited(_localController!.pause());
+      unawaited(_localController.pause());
     }
-    unawaited(_localController!.seekTo(target));
+    unawaited(_localController.seekTo(target));
   }
 
   void _updateScrub(double rawValue) {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     final target = _clampToDuration(
@@ -1060,18 +999,18 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
       value,
     );
     setState(() => _scrubPosition = target);
-    unawaited(_localController!.seekTo(target));
+    unawaited(_localController.seekTo(target));
   }
 
   Future<void> _endScrub(double rawValue) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     final target = _clampToDuration(
       Duration(milliseconds: rawValue.round()),
       value,
     );
-    await _localController!.seekTo(target);
+    await _localController.seekTo(target);
     if (!mounted) return;
 
     setState(() {
@@ -1079,33 +1018,40 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
       _scrubPosition = target;
     });
     if (_resumeAfterScrub) {
-      await _localController!.play();
+      await _localController.play();
     }
     _resumeAfterScrub = false;
   }
 
   Future<void> _seekBy(Duration offset) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
     await _seekTo(value.position + offset);
   }
 
   Future<void> _seekTo(Duration target) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
     final clamped = _clampToDuration(target, value);
     final wasPlaying = value.isPlaying;
-    await _localController!.pause();
-    await _localController!.seekTo(clamped);
-    if (wasPlaying) await _localController!.play();
+    await _localController.pause();
+    await _localController.seekTo(clamped);
+    if (wasPlaying) {
+      await _localController.play();
+    }
   }
 
   Duration _effectiveDuration(VideoPlayerValue value) {
+    final labelDuration = _parseDurationLabel(widget.video.duration);
+    if (value.duration > Duration.zero && labelDuration != null) {
+      final result = value.duration > labelDuration ? value.duration : labelDuration;
+      return result;
+    }
     if (value.duration > Duration.zero) {
       return value.duration;
     }
-    if (_fallbackDuration != null) {
-      return _fallbackDuration!;
+    if (labelDuration != null) {
+      return labelDuration;
     }
     return Duration.zero;
   }
@@ -1138,7 +1084,7 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   void _handleVideoTick() {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!mounted || !value.isInitialized) return;
     final duration = value.duration;
     final completed =
@@ -1153,18 +1099,18 @@ class _RewatchVideoSheetState extends State<_RewatchVideoSheet> {
   }
 
   void _togglePlayPause() {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (value.isPlaying) {
-      _localController!.pause();
+      _localController.pause();
       return;
     }
     final duration = _effectiveDuration(value);
     if (_isCompleted &&
         duration > Duration.zero &&
         value.position >= duration) {
-      _localController!.seekTo(Duration.zero);
+      _localController.seekTo(Duration.zero);
     }
-    _localController!.play();
+    _localController.play();
   }
 
   Duration? _parseDurationLabel(String? input) {

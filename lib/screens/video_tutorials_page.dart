@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../components/fraction_widget.dart';
 import '../data/gas_law_content.dart';
@@ -266,7 +265,6 @@ class VideoTutorialsPage extends StatelessWidget {
                       videoAssetPath: video.videoAssetPath,
                       accentColor: lesson.type.color,
                       fallbackDurationLabel: video.duration,
-                      videoUrl: video.videoUrl,
                     ),
                     const SizedBox(height: 24),
                     _buildFormulaCard(lesson),
@@ -402,7 +400,6 @@ class VideoTutorialsPage extends StatelessWidget {
                 videoAssetPath: video.videoAssetPath,
                 accentColor: video.color,
                 fallbackDurationLabel: video.duration,
-                videoUrl: video.videoUrl,
               ),
               const Spacer(),
               SizedBox(
@@ -591,13 +588,11 @@ class _AssetVideoPlayer extends StatefulWidget {
     required this.videoAssetPath,
     required this.accentColor,
     this.fallbackDurationLabel,
-    this.videoUrl,
   });
 
   final String videoAssetPath;
   final Color accentColor;
   final String? fallbackDurationLabel;
-  final String? videoUrl;
 
   @override
   State<_AssetVideoPlayer> createState() => _AssetVideoPlayerState();
@@ -605,9 +600,7 @@ class _AssetVideoPlayer extends StatefulWidget {
 
 class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   static const Duration _skipDuration = Duration(seconds: 10);
-  VideoPlayerController? _localController;
-  YoutubePlayerController? _youtubeController;
-  Duration? _fallbackDuration;
+  late final VideoPlayerController _localController;
   bool _isScrubbing = false;
   Duration _scrubPosition = Duration.zero;
   bool _resumeAfterScrub = false;
@@ -616,45 +609,32 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    if (widget.videoUrl != null) {
-      _youtubeController = YoutubePlayerController(
-        initialVideoId: YoutubePlayer.convertUrlToId(widget.videoUrl!)!,
-        flags: const YoutubePlayerFlags(autoPlay: false),
-      );
-    } else {
-      _fallbackDuration = _parseDurationLabel(widget.fallbackDurationLabel);
-      _localController = VideoPlayerController.asset(widget.videoAssetPath);
-      _localController!
-          .initialize()
-          .then((_) {
-            _localController!.setLooping(false);
-          })
-          .catchError((_) {
-            if (!mounted) return;
-            setState(() => _hasInitError = true);
-          });
-    }
+    _localController = VideoPlayerController.asset(widget.videoAssetPath);
+    _localController
+        .initialize()
+        .then((_) {
+          _localController.setLooping(false);
+        })
+        .catchError((Object err) {
+          if (!mounted) return;
+          setState(() => _hasInitError = true);
+        });
   }
 
   @override
   void dispose() {
-    _localController?.dispose();
-    _youtubeController?.dispose();
+    _localController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.videoUrl != null) {
-      return _buildYouTubePlayer();
-    }
-
     if (_hasInitError) {
       return _buildFallback('Unable to load local video file.');
     }
 
     return ValueListenableBuilder<VideoPlayerValue>(
-      valueListenable: _localController!,
+      valueListenable: _localController,
       builder: (context, value, _) {
         if (!value.isInitialized) {
           return _buildFallback('Loading video...');
@@ -681,37 +661,6 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
     );
   }
 
-  Widget _buildYouTubePlayer() {
-    return YoutubePlayerBuilder(
-      player: YoutubePlayer(
-        controller: _youtubeController!,
-        progressIndicatorColor: widget.accentColor,
-        bottomActions: [
-          CurrentPosition(),
-          ProgressBar(
-            isExpanded: true,
-            colors: ProgressBarColors(
-              playedColor: widget.accentColor,
-              handleColor: widget.accentColor,
-            ),
-          ),
-          RemainingDuration(),
-          FullScreenButton(),
-        ],
-      ),
-      builder: (context, player) {
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: player,
-        );
-      },
-    );
-  }
-
   Widget _buildVideoSurface(VideoPlayerValue value) {
     final showCenterControl = !value.isPlaying || value.isBuffering;
 
@@ -723,7 +672,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            VideoPlayer(_localController!),
+            VideoPlayer(_localController),
             AnimatedOpacity(
               opacity: showCenterControl ? 1 : 0,
               duration: const Duration(milliseconds: 180),
@@ -776,7 +725,6 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       0.0,
       sliderMax,
     );
-
     return Container(
       color: AppColors.textPrimary,
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
@@ -881,7 +829,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   }
 
   void _startScrub(double rawValue) {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     _resumeAfterScrub = value.isPlaying;
@@ -894,13 +842,13 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       _scrubPosition = target;
     });
     if (value.isPlaying) {
-      unawaited(_localController!.pause());
+      unawaited(_localController.pause());
     }
-    unawaited(_localController!.seekTo(target));
+    unawaited(_localController.seekTo(target));
   }
 
   void _updateScrub(double rawValue) {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     final target = _clampToDuration(
@@ -908,18 +856,18 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       value,
     );
     setState(() => _scrubPosition = target);
-    unawaited(_localController!.seekTo(target));
+    unawaited(_localController.seekTo(target));
   }
 
   Future<void> _endScrub(double rawValue) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
 
     final target = _clampToDuration(
       Duration(milliseconds: rawValue.round()),
       value,
     );
-    await _localController!.seekTo(target);
+    await _localController.seekTo(target);
     if (!mounted) return;
 
     setState(() {
@@ -927,7 +875,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
       _scrubPosition = target;
     });
     if (_resumeAfterScrub) {
-      await _localController!.play();
+      await _localController.play();
     }
     _resumeAfterScrub = false;
   }
@@ -955,33 +903,35 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   }
 
   Future<void> _seekBy(Duration offset) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
     final target = value.position + offset;
     await _seekTo(target);
   }
 
   Future<void> _seekTo(Duration target) async {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (!value.isInitialized) return;
     final clamped = _clampToDuration(target, value);
     final wasPlaying = value.isPlaying;
-    await _localController!.pause();
-    await _localController!.seekTo(clamped);
-    if (wasPlaying) await _localController!.play();
+    await _localController.pause();
+    await _localController.seekTo(clamped);
+    if (wasPlaying) {
+      await _localController.play();
+    }
   }
 
   void _togglePlayPause() {
-    final value = _localController!.value;
+    final value = _localController.value;
     if (value.isPlaying) {
-      _localController!.pause();
+      _localController.pause();
       return;
     }
     final duration = _effectiveDuration(value);
     if (duration > Duration.zero && value.position >= duration) {
-      _localController!.seekTo(Duration.zero);
+      _localController.seekTo(Duration.zero);
     }
-    _localController!.play();
+    _localController.play();
   }
 
   Future<void> _openFullscreenPlayer(BuildContext context) {
@@ -992,7 +942,7 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
               backgroundColor: Colors.black,
               body: SafeArea(
                 child: ValueListenableBuilder<VideoPlayerValue>(
-                  valueListenable: _localController!,
+                  valueListenable: _localController,
                   builder: (context, value, _) {
                     if (!value.isInitialized) {
                       return const Center(
@@ -1047,11 +997,18 @@ class _AssetVideoPlayerState extends State<_AssetVideoPlayer> {
   }
 
   Duration _effectiveDuration(VideoPlayerValue value) {
+    final labelDuration = _parseDurationLabel(widget.fallbackDurationLabel);
+    if (value.duration > Duration.zero && labelDuration != null) {
+      final result = value.duration > labelDuration ? value.duration : labelDuration;
+      return result;
+    }
     if (value.duration > Duration.zero) {
       return value.duration;
     }
-    _fallbackDuration ??= _parseDurationLabel(widget.fallbackDurationLabel);
-    return _fallbackDuration ?? Duration.zero;
+    if (labelDuration != null) {
+      return labelDuration;
+    }
+    return Duration.zero;
   }
 
   Duration? _parseDurationLabel(String? input) {

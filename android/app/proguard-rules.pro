@@ -6,6 +6,11 @@
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
 
+# Media3 / ExoPlayer rules (video_player plugin)
+-keep class androidx.media3.** { *; }
+-keep interface androidx.media3.** { *; }
+-dontwarn androidx.media3.**
+
 # Gson rules
 -keepattributes Signature
 -keepattributes *Annotation*
